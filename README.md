@@ -8,7 +8,9 @@ you need a minimal nginx.conf
 
 script will create serveral directories under /var/www/ 
 
-if you use external drives append your config or change script!  
+if you use external drives append your config or change script! 
+
+the script will always assume www.domain.ltd as second subdomain 
 
 http and asks for https
 
