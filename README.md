@@ -1,5 +1,5 @@
 # owrtngxsslrprxyscript
-openwrt test nginx ssl https reverse proxy script with acme.sh support
+openwrt nginx ssl https reverse proxy script with acme.sh support
 
 # use
 first chmod -x the script 
