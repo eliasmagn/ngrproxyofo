@@ -297,15 +297,14 @@ case $opt in
   i) ipv4
     ;;
   s) https
-    echo "-e was triggered, Parameter: $OPTARG" >&2
+
     ;;
   g) http
-    echo "-g was triggered, Parameter: $OPTARG" >&2
+
     ;;
 
   h)
-    echo "Invalid option: -$OPTARG" >&2
-    exit 1
+help
     ;;
   :)
    echo "Wrong number of parameters"
