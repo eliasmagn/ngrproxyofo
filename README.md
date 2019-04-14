@@ -12,7 +12,7 @@ if you use external drives append your config or change script!
 
 the script will always assume www.domain.ltd as second subdomain 
 
-ngrpconf will config http and asks for https(starts ngrpconf_443)
+ngrpconf80 will config http and asks for https(starts ngrpconf_443)
 
 ./ngrpconf_80 domain.ltd ipadresstobeproxied 
 
