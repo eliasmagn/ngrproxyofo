@@ -15,7 +15,7 @@ echo "install nginx with ssl compile option"
 FQDN=0
 PROXYIP=0 
 
-
+######################################################GOODIP###############################
 goodip () {
 if [[ $2 =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then 
    echo "Ip is in correct format"
@@ -32,8 +32,8 @@ else
 fi
 }
 
-
-domainpoint () {
+######################################################DOMAINPOINTSTO########################
+domainpointsto () {
 ##TestIfDomainPointsOnLocalNetworkInterface
 ip=$(ping -c 1 $1 | gawk -F'[()]' '/PING/{print $2}')
 echo "ping $1 points to $ip"
@@ -59,6 +59,7 @@ fi
 FQDN=$1
 }
 
+######################################################NGINCONF80#############################
 nginxconf80 () {
 if [ ! -f /etc/nginx/nginx.conf ]; then
    echo "/etc/nginx/nginx.conf  does not exist!"
@@ -120,11 +121,11 @@ cat >> /etc/nginx/rproxy-sites/$FQDN.conf << EOF
 ####server_$FQDN
 
 EOF
-
-
 ####configFILEend
 }
 
+
+######################################################NGINCONF443#############################
 nginxconf443 () {
 
 echo "using $PROXYIP for $FQDN"
@@ -152,7 +153,7 @@ if [ ! -f /etc/nginx/rproxy-sites_ssl/$FQDN.conf ]; then
 
   echo "issuing letsencrypt certificates"
   echo "used command:"
-  echo "./acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN -ecc --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force > acme_ngrpconf_443.log"
+  echo "./root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN -ecc --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force > acme_ngrpconf_443.log"
   echo "acme.sh autput is stored in acme-$FQDN-443.log"
   /root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN-443.log
 
@@ -225,8 +226,8 @@ EOF
 
 }
 
-
-tnginxconf () {
+######################################################TESTNGINXCONF#################################
+testnginxconf () {
   echo "$FQDN" > /var/www/$FQDN/.well-known/acme_challenge/index.html
 
   nginx -t
@@ -257,7 +258,7 @@ else
 fi
 }
 
-
+####################################################DONE###################################
 done () {
   echo "starting nginx"
   /etc/init.d/nginx start
@@ -273,6 +274,7 @@ done () {
 
 
 
+main {
 
 if [ "$0" = "/bin/bash" ]; then
    echo -e "\e[92mscript is tested to run on bash not on $0 openwrt defaults to ash "
@@ -283,33 +285,43 @@ if [ "$0" = "/bin/bash" ]; then
    exit 1
 fi 
 
+for $opt in "$@"
+do 
 
 case $opt in
-  f)
+  -f)
     #add read options from file
     #while IFS='' read -r line || [[ -n "$line" ]]; do
     #    ###script to be wrapped
     #done < "$3"
 
     ;;
-  d) domain
-    ;;
-  i) ipv4
-    ;;
-  s) https
 
-    ;;
-  g) http
-
+  -d) domain
     ;;
 
-  h)
-help
+  -i) ipv4
     ;;
-  :)
-   echo "Wrong number of parameters"
+
+  -s) https
+
+    ;;
+
+  -g) http
+
+    ;;
+
+  -h)
+ 
+ help
+    ;;
+
+  *)
+#   echo "Wrong number of parameters"
    echo "minimal usage:"
    echo "user@host: ngrpconf -d example.com -i 0.0.0.0"
    echo "-h for full list"
     ;;
+
 esac
+}
