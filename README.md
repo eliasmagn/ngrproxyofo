@@ -21,6 +21,8 @@ the script will always assume www.domain.ltd as second subdomain
 
 -i RemoteIpAddress - If you want to proxy a IpAddress (ipv4/ipv6)
 
+-d localDomain - Domain of the proxy
+
 -s create SiteSpecificNginxConfig with ssl and execute acme.sh for letsencrypt cert
 
 -g create non ssl SiteSpecificNginxConfig
