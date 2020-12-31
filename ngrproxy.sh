@@ -7,7 +7,7 @@
 #
 
 ########################SIMPLE NGINX CONFIG FOR REVERSE PROXY IN OPENWRT#############
-#MAKE SURE uhttpd IS NOT LISTENING ON PORT 80 NOR 443
+
 #opkg install nginx 
 #open icmp in firewall
 #ping is needed 
@@ -23,6 +23,7 @@ startdir=$PWD
 if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-release | grep -q OpenWrt) -eq 0 ]]; then
 echo "running on non openwrt"
 openwrt=true
+echo 'MAKE SURE uhttpd IS NOT LISTENING ON PORT 80 NOR 443'
 else 
 echo "OpenWrt detected nice!"
 fi
