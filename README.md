@@ -15,7 +15,7 @@ if you use external drives append your config or change script!
 the script will always assume www.domain.ltd as second subdomain 
 
 
-./ngrproxy.sh {-r [remoteDomain] | -i [remoteIpAddress]} -d [localDomain] {-s -g}
+#### ./ngrproxy.sh {-r [remoteDomain] | -i [remoteIpAddress]} -d [localDomain] {-s -g}
 
 -r RemoteDomain - If you want to proxy a domain
 
