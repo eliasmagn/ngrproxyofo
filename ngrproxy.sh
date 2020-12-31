@@ -1,5 +1,11 @@
 #!/bin/bash 
 
+# Copyright (C) 2016-2021 Elias Haisch
+#
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+#
+
 ########################SIMPLE NGINX CONFIG FOR REVERSE PROXY IN OPENWRT#############
 #MAKE SURE uhttpd IS NOT LISTENING ON PORT 80 NOR 443
 #opkg install nginx 
