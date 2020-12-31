@@ -18,8 +18,6 @@
 
 echo "simple nginx reverse proxy configuration with acme support"
 echo "install nginx with ssl compile option"
-echo " wan adress and open firewall ports for port 80"
-echo "change uhttpd listen port 80 and 443 when u use luci on wan address"
 echo "nginx will be listen on port 80 and 443 by default"  
 startdir=$PWD
 if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-release | grep -q OpenWrt) -eq 0 ]]; then
