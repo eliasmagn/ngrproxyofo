@@ -1,3 +1,5 @@
+## Script is not working yet
+
 # owrtngxsslrprxyscript
 openwrt nginx ssl https reverse proxy script with acme.sh support
 
@@ -12,11 +14,11 @@ if you use external drives append your config or change script!
 
 the script will always assume www.domain.ltd as second subdomain 
 
-ngrpconf80 will config http and asks for https(starts ngrpconf_443)
 
-./ngrpconf_80 domain.ltd ipadresstobeproxied 
+./ngrproxy.sh {-r [remoteDomain] | -i [remoteIpAddress]} -d [localDomain] {-s -g}
 
-or https only 
-
-./ngrpconf_443 domain.ltd ipadresstobeproxied 
-
+-r RemoteDomain - If you want to proxy a domain
+-i RemoteIpAddress - If you want to proxy a IpAddress (ipv4/ipv6)
+-s create SiteSpecificNginxConfig with ssl and execute acme.sh for letsencrypt cert
+-g create non ssl SiteSpecificNginxConfig
+-h no help help
