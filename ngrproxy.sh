@@ -47,6 +47,7 @@ echo 'blame yourself to not have contributed this function yet'
 echo ' or just do it ;-)'
 }
 
+######################################################HELP#################################
 
 
 function yesorno {
@@ -147,11 +148,11 @@ for ip in "${ips[@]}"
 do
   ip a | grep -q "$ip"
   if [[ $? -ne 0 ]]; then
-    echo "The address of domain $1 is not pointing on any local interface(ping command) -> abort script? (y/n)"
     echo "$ip not found on local interface"
+    echo "The address of domain $1 is not pointing on any local interface(ping command) -> abort script? (y/n)"
     yesorno
     if [[ $? = 1 ]]; then
-      exit 1
+      return 2
     fi
   else
     echo "$ip found address pointing on me"
@@ -507,6 +508,10 @@ case $opt in
     shift
     domainpointsto $1
     if [[ $? == 0 ]]; then
+      fqdn="$1"
+    elif [[ $? == 2 ]]; then
+      echo "remember that no one will be able to connect to your service via asking an DNS-server"
+      echo "using domain $1"
       fqdn="$1"
     else
       echo "dns fault!"
