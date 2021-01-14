@@ -496,7 +496,7 @@ case $opt in
 
   -i)  ####remote_ip
     shift
-    if [[ "$(goodip "$1")" -eq "$1" ]]; then
+    if [[ "$(goodip "$1")" == "$1" ]]; then
       rem_address="$1"
     else
       echo 'ip is not correct format?'
