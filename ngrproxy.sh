@@ -566,10 +566,15 @@ esac
 done
 
 #needed args are set if then else?
-if [[ -z $fqdn ]] || [[ -z $rem_address ]]; then
-  echo "wrong number of arguments"
-  helpme
-  exit 1
+if [[ $? == 0 ]]; then
+  if [[ -z $fqdn ]] || [[ -z $rem_address ]]; then
+    echo "wrong number of arguments"
+    helpme
+    exit 1
+  fi
+else 
+echo "aborted script due to faults!"
+exit 1
 fi
 } 
 
