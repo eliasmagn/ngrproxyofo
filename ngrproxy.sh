@@ -398,7 +398,7 @@ function done {
 function uhttpdconf {
 
 if [[ openwrt == true ]] $$ [[ $(netstat -l -p -n | grep -E 0.0.0.0:80 | grep -q uhttpd) -eq 0 ]]; then
-  echo -n "Should i change the port of uhttpd(p), its listen address(a), both(pa) or nothing(n) pls enter(p/a/pa/n)?: "
+  echo -n 'Should i change the port of uhttpd(p), its listen address(a), both(pa) or nothing(n) pls enter(p/a/pa/n)?: '
   read pan
   case $pan in 
 
