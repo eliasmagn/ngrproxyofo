@@ -93,10 +93,10 @@ fi
 
 function parseping {
 
-ip=$(ping -4 -c1 $1)
+ip=$(ping -4 -c1 $1 2>/dev/null)
 ip=${ip%%')'*}
 ip="$(goodip ${ip#[a-zA-Z0-9]*'('})"
-ip6=$(ping -6 -c1 $1)
+ip6=$(ping -6 -c1 $1 2>/dev/null)
 ip6=${ip6%%')'*}
 ip6="$(goodip ${ip6#[a-zA-Z0-9]*'('})"
 if [[ $ip != 1 ]] || [[ $ip6 != 1 ]]; then
