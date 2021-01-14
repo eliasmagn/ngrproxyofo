@@ -77,8 +77,9 @@ ask=''
 
 ######################################################GOODIP################################
 ###parameter is ipv4 or ipv6 address#
+
 function goodip {
-if [[ $1 =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || [[ $1 =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then 
+if [[ $1 =~ ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?) ]] || [[ $1 =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then 
   echo $1   
 else
   echo 1;
@@ -176,12 +177,12 @@ if [[ $? -eq 0 ]]; then
   proxy_pass='proxy_pass https://$PROXYIP;'
   echo "set proxy_ssl_verify on ? Yes/No?"
   yesorno
-  if [[ $? -eq 0 ]]
-  echo "set to on!"
-  proxy_ssl_verify='proxy_ssl_verify on;'
+  if [[ $? -eq 0 ]]; then
+    echo "set to on!"
+    proxy_ssl_verify='proxy_ssl_verify on;'
   else
-  echo "set to off!"
-  proxy_ssl_verify='proxy_ssl_verify off;'
+    echo "set to off!"
+    proxy_ssl_verify='proxy_ssl_verify off;'
   fi
 else
   proxy_pass='proxy_pass http://$PROXYIP;'
@@ -390,6 +391,62 @@ function done {
   echo 'end of script'
 }
 
+
+#####################################################uhttpdconf############ ARGS NONE ##########
+
+
+function uhttpdconf {
+
+if [[ openwrt == true ]] $$ [[ $(netstat -l -p -n | grep -E 0.0.0.0:80 | grep -q uhttpd) -eq 0 ]]; then
+  echo -n "Should i change the port of uhttpd(p), its listen address(a), both(pa) or nothing(n) pls enter(p/a/pa/n)?: "
+  read pan
+  case $pan in 
+
+      p) /etc/config/uhttpd
+         vi -c %s/$1:$2/0.0.0.0:$port/gc -c q! /etc/config/uhttpd
+      a) /etc/config/uhttpd
+         vi -c %s/$1/$address/gc -c q! /etc/config/uhttpd
+      n)
+        echo '####################FAULT##################################'
+        echo -n "port is in use by "
+        netstat -l -p -n | grep -E 0.0.0.0:80
+        echo "choose different port or ip for one of the services and try again."
+        echo '###########################################################'
+        exit1
+        ;;
+  esac
+fi
+
+}
+
+
+#####################################################WHOLISTENS############ ARGS NONE ##########
+
+function wholistensp {
+
+listens=$(netstat -l -p -n | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\:([0-9]{1,5})")
+netstat -l -p -n | grep -E -q 0.0.0.0:80
+if [[ $? -ne 0 ]]; then
+  for socket in ${listens[@]}
+  do
+    if [[ $(echo $socket | grep -o "$1:$2") == "$1:$2" ]]; then 
+      echo "port $2 is in use on ip  by "
+    fi
+done 
+else
+  echo '####################FAULT##################################'
+  echo -n "port is in use by "
+  netstat -l -p -n | grep -E 0.0.0.0:80
+  echo "choose different port or ip for one of the services and try again."
+  echo '###########################################################'
+fi
+}
+
+
+
+
+
+
 #############################################GETARGS############ ARGS ALL INPUT in any order ##########
 
 
@@ -414,12 +471,15 @@ case $opt in
     #done < "$3"
    # ;;
 
-  -r) 
+  
+
+
+  -r) ####remote_domain example.com
     shift 
     rem_address="$1"
     ;;
 
-  -i)  
+  -i)  ####remote_ip
     shift
     if [[ $(goodip "$1") -eq "$1" ]];
       rem_address="$1"
@@ -429,7 +489,7 @@ case $opt in
     fi
     ;;
 
-  -d) 
+  -d) ####local_domain  example.com
     shift
     local_ips="$(domainpointsto $1)"
     if [[ $local_ips != 1 ]]; then
@@ -441,10 +501,17 @@ case $opt in
     fi
     ;;
 
-  -s)
+  -s) #### https port defaults to 443
+    # future me: realize with function and/or case statement?
+    shift
     nginx -V 2>&1 | grep -q ssl 
     if [[ "$?" -eq 0 ]];
-      https=true;
+      wholistensp $1
+      if [[ "$?" -eq 0 ]];
+        https=$1;
+      else
+        echo "port in use by: $(wholistensp $1)"
+      fi
     else
       echo 'nginx not build with ssl support?'
       echo 'or script was run with missing permissions?'
@@ -453,10 +520,17 @@ case $opt in
     fi
     ;;
 
-  -g) 
+  -g)
+    # future me: realize in with function and/or case statement?
+    shift
     nginx -V 2>&1 | grep -q "nginx version: nginx"
     if [[ "$?" -eq 0 ]];
-    http=true;
+      wholistensp $1
+      if [[ "$?" -eq 0 ]];
+        http=$1;
+      else
+        echo "port in use by: $(wholistensp $1)"
+      fi
     else
       echo 'nginx not found?'
       echo 'or script was run with missing permissions?'
@@ -478,9 +552,11 @@ esac
 done
 
 #needed args are set if then else?
-
-
-
+if [[ -z $fqdn ]] || [[ -z $rem_address ]]; then
+  echo "wrong number of arguments"
+  helpme
+  exit 1
+fi
 } 
 
 ########################################################SCRIPT#######################
