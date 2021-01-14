@@ -151,7 +151,7 @@ do
     echo "$ip not found on local interface"
     echo "The address of domain $1 is not pointing on any local interface(ping command) -> abort script? (y/n)"
     yesorno
-    if [[ $? = 1 ]]; then
+    if [[ $? == 1 ]]; then
       return 2
     fi
   else
