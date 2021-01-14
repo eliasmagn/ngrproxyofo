@@ -262,12 +262,12 @@ if [[ $? -eq 0 ]]; then
   proxy_pass='proxy_pass https://$PROXYIP;'
   echo "set proxy_ssl_verify on ? Yes/No?"
   yesorno
-  if [[ $? -eq 0 ]]
-  echo "set to on!"
-  proxy_ssl_verify='proxy_ssl_verify on;'
+  if [[ $? -eq 0 ]]: then
+    echo "set to on!"
+    proxy_ssl_verify='proxy_ssl_verify on;'
   else
-  echo "set to off!"
-  proxy_ssl_verify='proxy_ssl_verify off;'
+    echo "set to off!"
+    proxy_ssl_verify='proxy_ssl_verify off;'
   fi
 else
   proxy_pass='proxy_pass http://$PROXYIP;'
