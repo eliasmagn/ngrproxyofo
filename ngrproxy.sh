@@ -19,6 +19,7 @@
 echo "simple nginx reverse proxy configuration with acme support"
 echo "install nginx with ssl compile option"
 echo "nginx will be listen on port 80 and 443 by default"  
+local_ips="0.0.0.0"
 startdir=$PWD
 if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-release | grep -q OpenWrt) -eq 0 ]]; then
 echo "running on non openwrt"
@@ -82,11 +83,12 @@ function goodip {
 if [[ $1 =~ ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?) ]] || [[ $1 =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then 
   echo $1   
 else
-  echo 1;
+  echo 1  
   return 1;
 fi
 
 }
+######################################################PARSEPING################################
 
 function parseping {
 
@@ -97,17 +99,21 @@ ip6=$(ping -6 -c1 $1)
 ip6=${ip6%%')'*}
 ip6="$(goodip ${ip6#[a-zA-Z0-9]*'('})"
 if [[ $ip != 1 ]] || [[ $ip6 != 1 ]]; then
+  if [[ $ip != 1 ]]; then
   # echo "$ip $ip6" | grep -q "ping: sendto: Permission denied"
   # if [[ $? -eq 0 ]]; then 
   # >&2 echo "ping: sendto: Permission denied --> is your ipv6 not set up correctly?"
   # echo "$ip"
   # else 
-echo "$ip $ip6" 
-  # fi
+    echo -n "$ip"
+  fi
+  if [[ $ip6 != 1 ]]; then
+    echo -n " $ip6"
+  fi
 else
-  echo 1
-  return 1
+  return 2
 fi
+
 }
 
 ######################################################DOMAINPOINTSTO########################
@@ -115,7 +121,7 @@ function domainpointsto {
 ##TestIfDomainPointsOnLocalNetworkInterface
 echo "probing with ping -c1 for ipv4 and ipv6 addresses"
 
-ips=parseping $1
+ips="$(parseping $1)"
 case $? in 
   2)
     echo "network fault"
@@ -129,7 +135,7 @@ case $? in
     echo '"pinging"'
     ping -4 -c1 $1
     echo '"nslooking"'
-    nslookup $1
+    nslookup $1                             #######missing everything here
     echo "FQDN points to VALID ip"
     ;;
   0) 
@@ -149,6 +155,7 @@ do
     fi
   else
     echo "$ip found address pointing on me"
+    local_ips=$ip
     return 0
   fi
 done
@@ -481,9 +488,6 @@ case $opt in
     #done < "$3"
    # ;;
 
-  
-
-
   -r) ####remote_domain example.com
     shift 
     rem_address="$1"
@@ -499,10 +503,10 @@ case $opt in
     fi
     ;;
 
-  -d) ####local_domain  example.com
+  -d) ####pointing_domain  example.com
     shift
-    local_ips="$(domainpointsto $1)"
-    if [[ $local_ips != 1 ]]; then
+    domainpointsto $1
+    if [[ $? == 0 ]]; then
       fqdn="$1"
     else
       echo "dns fault!"
@@ -516,7 +520,7 @@ case $opt in
     shift
     nginx -V 2>&1 | grep -q ssl 
     if [[ "$?" -eq 0 ]]; then
-      wholistensp $1
+      wholistensp $1 $local_ips
       if [[ "$?" -eq 0 ]]; then
         https=$1;
       else
@@ -535,7 +539,7 @@ case $opt in
     shift
     nginx -V 2>&1 | grep -q "nginx version: nginx"
     if [[ "$?" -eq 0 ]]; then
-      wholistensp $1
+      wholistensp $1 $local_ips
       if [[ "$?" -eq 0 ]]; then
         http=$1
       else
