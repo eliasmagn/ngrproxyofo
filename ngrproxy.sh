@@ -405,14 +405,16 @@ else
     read pan
     case $pan in
   
-        p) #/etc/config/uhttpd
-           cp /etc/config/uhttpd /etc/config/uhttpd.old
-           vi -c %s/$1:$2/0.0.0.0:$port/gc -c q! /etc/config/uhttpd
-           /etc/init.d/uhttpd restart
-        a) #/etc/config/uhttpd
-           cp /etc/config/uhttpd /etc/config/uhttpd.old
-           vi -c %s/$1/$address/gc -c q! /etc/config/uhttpd
-           /etc/init.d/uhttpd restart
+        p)  #/etc/config/uhttpd
+            cp /etc/config/uhttpd /etc/config/uhttpd.old
+            vi -c %s/$1:$2/0.0.0.0:$port/gc -c q! /etc/config/uhttpd
+            /etc/init.d/uhttpd restart
+            ;;
+        a)  #/etc/config/uhttpd
+            cp /etc/config/uhttpd /etc/config/uhttpd.old
+            vi -c %s/$1/$address/gc -c q! /etc/config/uhttpd
+            /etc/init.d/uhttpd restart
+            ;;
         n)
           echo '####################FAULT##################################'
           echo -n "port is in use by "
@@ -423,7 +425,6 @@ else
           ;;
     esac
   fi  
-  
 fi
 
 }
