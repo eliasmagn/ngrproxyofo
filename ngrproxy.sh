@@ -420,7 +420,7 @@ fi
 }
 
 
-#####################################################WHOLISTENS############ ARGS NONE ##########
+#####################################################WHOLISTENS############ ARGS ??????????????????? ##########
 
 function wholistensp {
 
@@ -481,7 +481,7 @@ case $opt in
 
   -i)  ####remote_ip
     shift
-    if [[ $(goodip "$1") -eq "$1" ]];
+    if [[ $(goodip "$1") -eq "$1" ]]; then
       rem_address="$1"
     else
       echo 'ip is not correct format?'
@@ -505,9 +505,9 @@ case $opt in
     # future me: realize with function and/or case statement?
     shift
     nginx -V 2>&1 | grep -q ssl 
-    if [[ "$?" -eq 0 ]];
+    if [[ "$?" -eq 0 ]]; then
       wholistensp $1
-      if [[ "$?" -eq 0 ]];
+      if [[ "$?" -eq 0 ]]; then
         https=$1;
       else
         echo "port in use by: $(wholistensp $1)"
@@ -570,3 +570,4 @@ else
 echo 'nope?'
 helpme
 fi
+"
