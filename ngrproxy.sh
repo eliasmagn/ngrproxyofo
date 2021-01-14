@@ -534,10 +534,10 @@ case $opt in
     # future me: realize in with function and/or case statement?
     shift
     nginx -V 2>&1 | grep -q "nginx version: nginx"
-    if [[ "$?" -eq 0 ]];
+    if [[ "$?" -eq 0 ]]; then
       wholistensp $1
-      if [[ "$?" -eq 0 ]];
-        http=$1;
+      if [[ "$?" -eq 0 ]]; then
+        http=$1
       else
         echo "port in use by: $(wholistensp $1)"
       fi
