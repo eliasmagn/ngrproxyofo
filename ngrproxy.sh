@@ -66,7 +66,7 @@ while [[ $ask == true ]]; do
             return 1
             ;;
 
-          *) echo "What? "
+          *) echo 'What? '
             ask=true;
             ;;
 
@@ -245,7 +245,7 @@ PROXYIP=$1
 FQDN=$2
 
 echo "using $PROXYIP for $FQDN"
-echo "setting up directories "# /var/www/$FQDN"
+echo "setting up directories "# /var/www/$FQDN
 echo "#"
 mkdir -p /var/www/$FQDN
 mkdir -p /etc/nginx/rproxy-sites_ssl_available
