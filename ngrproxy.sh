@@ -262,7 +262,7 @@ if [[ $? -eq 0 ]]; then
   proxy_pass='proxy_pass https://$PROXYIP;'
   echo "set proxy_ssl_verify on ? Yes/No?"
   yesorno
-  if [[ $? -eq 0 ]]: then
+  if [[ $? -eq 0 ]]; then
     echo "set to on!"
     proxy_ssl_verify='proxy_ssl_verify on;'
   else
@@ -366,7 +366,6 @@ function testnginxconf {
   #echo "$FQDN" > /var/www/$FQDN/.well-known/acme_challenge/index.html
 
   nginx -t
-  if 
   if [[ $? -ne 0 ]]; then
     echo "Nginx config is faulty pls be kind and examine /etc/nginx/rproxy-sites/$FQDN.conf"
     echo "and /etc/nginx/nginx.conf!"
@@ -392,29 +391,39 @@ function done {
 }
 
 
-#####################################################uhttpdconf############ ARGS NONE ##########
+#####################################################uhttpdconf############ ARGS ?????????? ##########
 
 
 function uhttpdconf {
 
-if [[ openwrt == true ]] $$ [[ $(netstat -l -p -n | grep -E 0.0.0.0:80 | grep -q uhttpd) -eq 0 ]]; then
-  echo -n 'Should i change the port of uhttpd(p), its listen address(a), both(pa) or nothing(n) pls enter(p/a/pa/n)?: '
-  read pan
-  case $pan in 
-
-      p) /etc/config/uhttpd
-         vi -c %s/$1:$2/0.0.0.0:$port/gc -c q! /etc/config/uhttpd
-      a) /etc/config/uhttpd
-         vi -c %s/$1/$address/gc -c q! /etc/config/uhttpd
-      n)
-        echo '####################FAULT##################################'
-        echo -n "port is in use by "
-        netstat -l -p -n | grep -E 0.0.0.0:80
-        echo "choose different port or ip for one of the services and try again."
-        echo '###########################################################'
-        exit1
-        ;;
-  esac
+if [[ openwrt != true ]]; then
+  echo "not runing openwrt, you have to reconfigure that yourself"
+else
+  if [[ $(netstat -l -p -n | grep -E 0.0.0.0:80 | grep -q uhttpd) -eq 0 ]] || [[ $(netstat -l -p -n | grep -E $1:$2 | grep -q uhttpd) -eq 0 ]]; then
+    echo -n 'Should i change the port of uhttpd(p), its listen address(a), both(pa) or nothing(n) pls enter(p/a/pa/n)?: '
+    echo 'uhttpd-config backup will be created as /etc/config/uhttpd.old'
+    read pan
+    case $pan in
+  
+        p) #/etc/config/uhttpd
+           cp /etc/config/uhttpd /etc/config/uhttpd.old
+           vi -c %s/$1:$2/0.0.0.0:$port/gc -c q! /etc/config/uhttpd
+           /etc/init.d/uhttpd restart
+        a) #/etc/config/uhttpd
+           cp /etc/config/uhttpd /etc/config/uhttpd.old
+           vi -c %s/$1/$address/gc -c q! /etc/config/uhttpd
+           /etc/init.d/uhttpd restart
+        n)
+          echo '####################FAULT##################################'
+          echo -n "port is in use by "
+          netstat -l -p -n | grep -E 0.0.0.0:80
+          echo "choose different port or ip for one of the services and try again."
+          echo '###########################################################'
+          exit1
+          ;;
+    esac
+  fi  
+  
 fi
 
 }
