@@ -151,7 +151,7 @@ do
     echo "$1 POINTS ON $ip WHICH IS not found on local interface"
   else
     echo "$ip found $1 is pointing on me"
-    local_ips+=$ip
+    local_ips+="$ip"
     return 0
   fi
 done
@@ -166,6 +166,16 @@ done
     fi
 
 } 
+
+function clisten {
+
+for ip in "${local_ips[@]}"
+do
+  echo "listen      $ip $1;"
+done
+
+}
+
 
 #####################################NGINCONF80### ARGS $1=ipaddresstobeproxied $2=FQDN ###########
 function nginxconf80 {
@@ -211,7 +221,7 @@ PROXY_CONNECT_TIMEOUT="90"
 PROXY_SEND_TIMEOUT="90"
 PROXY_READ_TIMEOUT="90"
 PROXY_BUFFERS="32 4k"
-LISTEN="$(echo "listen 
+
 
 cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << "EOF"
 
@@ -219,7 +229,7 @@ cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << "EOF"
     server {
         server_name   $FQDN;
         server_name   www.$FQDN;
-        listen        80;
+        $(clisten $http)
 
         error_page    500 502 503 504  /50x.html;
 
@@ -344,7 +354,7 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
     server {
         server_name   $FQDN;
         server_name   www.$FQDN;
-        listen        $ip $https;
+        $(clisten $https)
 
         error_page    500 502 503 504  /50x.html;
 
