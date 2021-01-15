@@ -19,7 +19,7 @@
 echo "simple nginx reverse proxy configuration with acme support"
 echo "install nginx with ssl compile option"
 echo "nginx will be listen on port 80 and 443 by default"  
-local_ips="0.0.0.0"
+local_ips=""
 startdir=$PWD
 if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-release | grep -q OpenWrt) -eq 0 ]]; then
 echo "running on non openwrt"
@@ -148,18 +148,22 @@ for ip in "${ips[@]}"
 do
   ip a | grep -q "$ip"
   if [[ $? -ne 0 ]]; then
-    echo "$ip not found on local interface"
+    echo "$1 POINTS ON $ip WHICH IS not found on local interface"
+  else
+    echo "$ip found $1 is pointing on me"
+    local_ips+=$ip
+    return 0
+  fi
+done
+
+
+
+ echo "$ip not found on local interface"
     echo "The address of domain $1 is not pointing on any local interface(ping command) -> abort script? (y/n)"
     yesorno
     if [[ $? == 1 ]]; then
       return 2
     fi
-  else
-    echo "$ip found address pointing on me"
-    local_ips=$ip
-    return 0
-  fi
-done
 
 } 
 
@@ -182,24 +186,32 @@ host='$host'
 echo "Set proxy pass to https? Yes/No?"
 yesorno
 if [[ $? -eq 0 ]]; then
-  proxy_pass='proxy_pass https://$PROXYIP;'
+  PROXY_PASS='proxy_pass https://$PROXYIP;'
   echo "set proxy_ssl_verify on ? Yes/No?"
   yesorno
   if [[ $? -eq 0 ]]; then
     echo "set to on!"
-    proxy_ssl_verify='proxy_ssl_verify on;'
+    PROXY_SSL_VERIFY='proxy_ssl_verify on;'
   else
     echo "set to off!"
-    proxy_ssl_verify='proxy_ssl_verify off;'
+    PROXY_SSL_VERIFY='proxy_ssl_verify off;'
   fi
 else
-  proxy_pass='proxy_pass http://$PROXYIP;'
+  PROXY_PASS='proxy_pass http://$PROXYIP;'
 fi
 echo ""
 
 if [[ ! -f /etc/nginx/rproxy-sites_available/$FQDN.conf ]]; then
 
 ####configFILE
+
+CLIENT_MAX_BODY_SIZE="10m"
+CLIENT_BODY_BUFFER_SIZE="128k"
+PROXY_CONNECT_TIMEOUT="90"
+PROXY_SEND_TIMEOUT="90"
+PROXY_READ_TIMEOUT="90"
+PROXY_BUFFERS="32 4k"
+
 
 cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
 
@@ -225,14 +237,14 @@ cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
                proxy_set_header X-Forwarded-Host $host;
                proxy_set_header X-Forwarded-Proto $scheme;
                proxy_set_header X-Forwarded-Server $http_host;
-               client_max_body_size    10m;
-               client_body_buffer_size 128k;
-               proxy_connect_timeout   90;
-               proxy_send_timeout      90;
-               proxy_read_timeout      90;
-               proxy_buffers           32 4k;
-               $proxy_pass
-               $proxy_ssl_verify
+               client_max_body_size    $CLIENT_MAX_BODY_SIZE;
+               client_body_buffer_size $CLIENT_BODY_BUFFER_SIZE;
+               proxy_connect_timeout   $PROXY_CONNECT_TIMEOUT;
+               proxy_send_timeout      $PROXY_SEND_TIMEOUT;
+               proxy_read_timeout      $PROXY_READ_TIMEOUT;
+               proxy_buffers           $PROXY_BUFFERS;
+               $PROXY_PASS
+               $PROXY_SSL_VERIFY
           }
 
 
@@ -259,27 +271,28 @@ mkdir -p /var/www/$FQDN
 mkdir -p /etc/nginx/rproxy-sites_ssl_available
 mkdir -p /etc/nginx/rproxy-sites_ssl_enabled
 mkdir -p /var/www/$FQDN/.well-known/acme_challenge/
-http_host='$http_host'
-remote_addr='$remote_addr'
-proxy_add_x_forwarded_for='$proxy_add_x_forwarded_for'
-scheme='$scheme'
-host='$host'
+HTTP_HOST='$http_host'
+REMOTE_ADDR='$remote_addr'
+PROXY_ADD_X_FORWARDED_FOR='$proxy_add_x_forwarded_for'
+SCHEME='$scheme'
+HOST='$host'
 echo "Set proxy pass to https? Yes/No?"
 yesorno
 if [[ $? -eq 0 ]]; then
-  proxy_pass='proxy_pass https://$PROXYIP;'
+  PROXY_PASS="proxy_pass https://$PROXYIP;"
   echo "set proxy_ssl_verify on ? Yes/No?"
   yesorno
   if [[ $? -eq 0 ]]; then
     echo "set to on!"
-    proxy_ssl_verify='proxy_ssl_verify on;'
+    PROXY_SSL_VERIFY='proxy_ssl_verify on;'
   else
     echo "set to off!"
-    proxy_ssl_verify='proxy_ssl_verify off;'
+    PROXY_SSL_VERIFY='proxy_ssl_verify off;'
   fi
 else
-  proxy_pass='proxy_pass http://$PROXYIP;'
+  PROXY_PASS="proxy_pass http://$PROXYIP;"
 fi
+echo ""
 if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
   echo "setting up directory /etc/nginx/acme.sh/$FQDN"
   echo "for certificates"
@@ -301,6 +314,27 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
 
 ####configFILE
 
+CLIENT_MAX_BODY_SIZE="10"'m'
+CLIENT_BODY_BUFFER_SIZE="128"'k'
+PROXY_CONNECT_TIMEOUT="90"
+PROXY_SEND_TIMEOUT="90"
+PROXY_READ_TIMEOUT="90"
+NPB="32"
+SPB="8"
+PROXY_BUFFERS="$NPB $SPB"'k'
+ngv=$(nginx -V 2>&1 | grep version)
+ngv=${ngv%%'('*}
+ngv=$(echo ${ngv#[a-zA-Z0-9]*'/'} | tr -d '.')
+if [[ $ngv > 1000 ]]; then  
+  ngv=$(( $ngv * 10))
+fi
+if [[ $ngv >= 1130 ]]; then  
+  SSLPV="3"
+else 
+  SSLPV="2"
+fi
+SSL_PROTOCOLS='TLSv1.'"$SSLPV"
+
 
 cat >> /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf << EOF
 
@@ -308,7 +342,7 @@ cat >> /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf << EOF
     server {
         server_name   $FQDN;
         server_name   www.$FQDN;
-        listen        443;
+        listen        $ip $https;
 
         error_page    500 502 503 504  /50x.html;
 
@@ -316,9 +350,8 @@ cat >> /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf << EOF
 	ssl_certificate /etc/nginx/acme.sh/$FQDN/fullchain.pem;
 	ssl_certificate_key     /etc/nginx/acme.sh/$FQDN/key.pem;
  	ssl_trusted_certificate /etc/nginx/acme.sh/$FQDN/cert.pem;
-        ssl_session_cache shared:SSL:10m;
         ssl_prefer_server_ciphers on;
-        ssl_protocols TLSv1.2; # TLSv1.3; #enable tlsv1.3 with nginx 1.13 or higher
+        ssl_protocols $SSL_PROTOCOLS; # TLSv1.3; #enable tlsv1.3 with nginx 1.13 or higher
         ssl_dhparam /etc/nginx/dh4096.pem;
 #	ssl_ciphers  EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:EECDH:EDH+aRSA:HIGH:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!SEED:!DSS:!CAMELLIA:!Medium;
         ssl_ciphers 'ECDHE:DHE:!AES128:HIGH:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!SEED:!DSS:!CAMELLIAD';
@@ -337,22 +370,22 @@ cat >> /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf << EOF
         add_header X-XSS-Protection "1; mode=block";
 
          location / {
-               add_header       X-Host          $host;
-               proxy_set_header        Host            $http_host;
-               proxy_set_header        X-Real-IP       $remote_addr;
+               add_header       X-Host          $HOST;
+               proxy_set_header        Host            $HTTP_HOST;
+               proxy_set_header        X-Real-IP       $REMOTE_ADDR;
                proxy_pass_request_headers on;
-               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-               proxy_set_header X-Forwarded-Host $host;
-               proxy_set_header X-Forwarded-Proto $scheme;
-               proxy_set_header X-Forwarded-Server $http_host;
-               client_max_body_size    10m;
-               client_body_buffer_size 128k;
-               proxy_connect_timeout   90;
-               proxy_send_timeout      90;
-               proxy_read_timeout      90;
-               proxy_buffers           32 4k;
-               $proxy_pass
-               $proxy_ssl_verify
+               proxy_set_header X-Forwarded-For $PROXY_ADD_X_FORWARDED_FOR;
+               proxy_set_header X-Forwarded-Host $HOST;
+               proxy_set_header X-Forwarded-Proto $SCHEME;
+               proxy_set_header X-Forwarded-Server $HTTP_HOST;
+               client_max_body_size    $CLIENT_MAX_BODY_SIZE;
+               client_body_buffer_size $CLIENT_BODY_BUFFER_SIZE;
+               proxy_connect_timeout   $PROXY_CONNECT_TIMEOUT;
+               proxy_send_timeout      $PROXY_SEND_TIMEOUT;
+               proxy_read_timeout      $PROXY_READ_TIMEOUT;
+               proxy_buffers           $PROXY_BUFFERS;
+               $PROXY_PASS
+               $PROXY_SSL_VERIFY
           }
 
 
@@ -586,9 +619,9 @@ fi
 ########################################################SCRIPT#######################
 
 getargs $@
-if [[ $https == true ]]; then
+if [[ $https ]]; then
   nginxconf443 "$rem_address" "$fqdn"
-elif [[ $http == true ]]; then
+elif [[ $http ]]; then
   nginxconf80 "$rem_address" "$fqdn"
 else
 echo 'nope?'
