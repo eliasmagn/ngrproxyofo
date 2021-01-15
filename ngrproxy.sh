@@ -499,7 +499,7 @@ else
   echo '####################FAULT##################################'
   echo "port $2 and address $1 is in use by "
   netstat -l -p -n | grep -E 0.0.0.0:80 | grep uhttp 
-  if [[ $? -ne 0 ]] || [[ openwrt != true ]]; then
+  if [[ $? -ne 0 ]] || [[ $openwrt != true ]]; then
       echo "choose different port or ip for one of the services and try again."
   else
     uhttpdconf $1 $2
