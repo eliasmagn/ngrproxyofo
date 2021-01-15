@@ -444,7 +444,7 @@ function done {
 }
 
 
-#####################################################uhttpdconf############ ARGS ?????????? ##########
+#####################################################uhttpdconf############ ARGS ipaddress port ##########
 
 
 function uhttpdconf {
@@ -483,24 +483,29 @@ fi
 }
 
 
-#####################################################WHOLISTENS############ ARGS ??????????????????? ##########
-
+#####################################################WHOLISTENS############ ARGS ipaddress port ##########
+#This function should be changed to not call uhttpdconf by itself but report conflicting processes 
 function wholistensp {
 
 listens=$(netstat -l -p -n | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\:([0-9]{1,5})")
 netstat -l -p -n | grep -E -q 0.0.0.0:80
 if [[ $? -ne 0 ]]; then
-  for socket in ${listens[@]}
+  for process in ${listens[@]}
   do
-    if [[ $(echo $socket | grep -o "$1:$2") == "$1:$2" ]]; then 
-      echo "port $2 is in use on ip  by "
+    if [[ $(echo $process | grep -o "$1:$2") == "$1:$2" ]]; then 
+      echo "port $2 is in use on ip $1"
+      echo $process
     fi
 done 
 else
   echo '####################FAULT##################################'
-  echo -n "port is in use by "
-  netstat -l -p -n | grep -E 0.0.0.0:80
-  echo "choose different port or ip for one of the services and try again."
+  echo "port $2 and address $1 is in use by "
+  netstat -l -p -n | grep -E 0.0.0.0:80 | tee >&2 | grep uhttp 
+  if [[ $? -ne 0 ]] && [[ openwrt != true ]]; then
+      echo "choose different port or ip for one of the services and try again."
+  else
+    uhttpdconf $1 $2
+  fi
   echo '###########################################################'
 fi
 }
