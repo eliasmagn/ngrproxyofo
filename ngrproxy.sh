@@ -25,8 +25,6 @@ if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-releas
 echo "running on non openwrt"
 openwrt=true
 echo 'MAKE SURE uhttpd IS NOT LISTENING ON PORT 80 NOR 443'
-else 
-echo "OpenWrt detected nice!"
 fi
 
 
@@ -484,7 +482,7 @@ fi
 
 
 #####################################################WHOLISTENS############ ARGS ipaddress port ##########
-#This function should be changed to not call uhttpdconf by itself but report conflicting processes 
+#This function should be changed to not call uhttpdconf by itself but report conflicting processes  
 function wholistensp {
 
 listens=$(netstat -l -p -n | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\:([0-9]{1,5})")
@@ -501,7 +499,7 @@ else
   echo '####################FAULT##################################'
   echo "port $2 and address $1 is in use by "
   netstat -l -p -n | grep -E 0.0.0.0:80 | tee >&2 | grep uhttp 
-  if [[ $? -ne 0 ]] && [[ openwrt != true ]]; then
+  if [[ $? -ne 0 ]] || [[ openwrt != true ]]; then
       echo "choose different port or ip for one of the services and try again."
   else
     uhttpdconf $1 $2
@@ -575,7 +573,7 @@ case $opt in
     shift
     nginx -V 2>&1 | grep -q ssl 
     if [[ "$?" -eq 0 ]]; then
-      wholistensp $1 $local_ips
+      wholistensp $local_ips $1
       if [[ "$?" -eq 0 ]]; then
         https=$1;
       else
@@ -594,7 +592,7 @@ case $opt in
     shift
     nginx -V 2>&1 | grep -q "nginx version: nginx"
     if [[ "$?" -eq 0 ]]; then
-      wholistensp $1 $local_ips
+      wholistensp $local_ips $1
       if [[ "$?" -eq 0 ]]; then
         http=$1
       else
