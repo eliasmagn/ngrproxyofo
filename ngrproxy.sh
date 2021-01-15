@@ -456,12 +456,18 @@ else
     read pan
     case $pan in
   
-        p)  #/etc/config/uhttpd
+        p*)  #/etc/config/uhttpd
+            echo -n 'please give me the new port uhttpd should listen on: '
+            read port
             cp /etc/config/uhttpd /etc/config/uhttpd.old
             vi -c %s/$1:$2/0.0.0.0:$port/gc -c q! /etc/config/uhttpd
             /etc/init.d/uhttpd restart
             ;;
-        a)  #/etc/config/uhttpd
+        *a)  #/etc/config/uhttpd
+            echo 'local ip addresses'
+            echo "$(ip a | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([0-9]{1,2})" | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")"
+            echo -n 'please give me the new IPAddress uhttpd should listen on: '
+            read address
             cp /etc/config/uhttpd /etc/config/uhttpd.old
             vi -c %s/$1/$address/gc -c q! /etc/config/uhttpd
             /etc/init.d/uhttpd restart
