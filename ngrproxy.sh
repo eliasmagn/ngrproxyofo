@@ -144,7 +144,7 @@ case $? in
 
 esac
 
-for ip in "${ips[@]}"
+for ip in ${ips[@]}
 do
   ip a | grep -q "$ip"
   if [[ $? -ne 0 ]]; then
