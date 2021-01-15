@@ -22,9 +22,8 @@ echo "nginx will be listen on port 80 and 443 by default"
 local_ips=""
 startdir=$PWD
 if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-release | grep -q OpenWrt) -eq 0 ]]; then
-echo "running on non openwrt"
+echo "running on openwrt"
 openwrt=true
-echo 'MAKE SURE uhttpd IS NOT LISTENING ON PORT 80 NOR 443'
 fi
 
 
@@ -447,9 +446,10 @@ function done {
 
 function uhttpdconf {
 
-if [[ openwrt != true ]]; then
+if [[ $openwrt != true ]]; then
   echo "not runing openwrt, you have to reconfigure that yourself"
 else
+  echo "nice openwrt detected"
   if [[ $(netstat -l -p -n | grep -E 0.0.0.0:80 | grep -q uhttpd) -eq 0 ]] || [[ $(netstat -l -p -n | grep -E $1:$2 | grep -q uhttpd) -eq 0 ]]; then
     echo -n 'Should i change the port of uhttpd(p), its listen address(a), both(pa) or nothing(n) pls enter(p/a/pa/n)?: '
     echo 'uhttpd-config backup will be created as /etc/config/uhttpd.old'
@@ -498,7 +498,7 @@ done
 else
   echo '####################FAULT##################################'
   echo "port $2 and address $1 is in use by "
-  netstat -l -p -n | grep -E 0.0.0.0:80 | tee >&2 | grep uhttp 
+  netstat -l -p -n | grep -E 0.0.0.0:80 | grep uhttp 
   if [[ $? -ne 0 ]] || [[ openwrt != true ]]; then
       echo "choose different port or ip for one of the services and try again."
   else
