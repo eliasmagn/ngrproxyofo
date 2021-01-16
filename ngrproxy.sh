@@ -452,16 +452,16 @@ else
   echo "nice openwrt detected"
   while [[ $(netstat -l -p -n | grep -E 0.0.0.0:80 | grep -q uhttpd) -eq 0 ]] || [[ $(netstat -l -p -n | grep -E $1:$2 | grep -q uhttpd) -eq 0 ]]; 
   do
-    echo -n 'Should i change the port of uhttpd(p), its listen address(a), both(pa) or nothing(n) pls enter(p/a/pa/n)?: '
     echo 'uhttpd-config backup will be created as /etc/config/uhttpd.old'
+    echo -n 'Should i change the port of uhttpd(p), its listen address(a), both(pa) or nothing(n) pls enter(p/a/pa/n)?: '
     read pan
     case $pan in
   
         p)  #/etc/config/uhttpd
-            echo -n 'please give me the new port uhttpd should listen on: '
+            echo -n 'please give me the new port uhttpd should listen on instead of $2: '
             read port
             cp /etc/config/uhttpd /etc/config/uhttpd.old
-            vi -c %s/$1:$2/0.0.0.0:$port/gc -c q! /etc/config/uhttpd
+            vi -c %s/$1:$2/0.0.0.0:$port/gc -c wq! /etc/config/uhttpd
             /etc/init.d/uhttpd restart
             ;;
         a)  #/etc/config/uhttpd
@@ -474,17 +474,17 @@ else
             i=$(($i+1))
             done
             echo ""
-            echo -n 'please give me the new IPAddress uhttpd should listen on: '
+            echo -n 'please give me the new IPAddress uhttpd should listen on instead of $1: '
             read pick
             cp /etc/config/uhttpd /etc/config/uhttpd.old
-            vi -c %s/$1/${local_addresses[$pick]}/gc -c q! /etc/config/uhttpd
+            vi -c %s/$1/${local_addresses[$pick]}/gc -c wq! /etc/config/uhttpd
             /etc/init.d/uhttpd restart
             ;;
         pa)
-            echo -n 'please give me the new port uhttpd should listen on: '
+            echo -n 'please give me the new port uhttpd should listen on instead of $2: '
             read port
             cp /etc/config/uhttpd /etc/config/uhttpd.old
-            vi -c %s/$1:$2/0.0.0.0:$port/gc -c q! /etc/config/uhttpd
+            vi -c %s/$1:$2/0.0.0.0:$port/gc -c wq! /etc/config/uhttpd
             echo 'local ip addresses'
             i=0
             local_addresses="$(ip a | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([0-9]{1,2})" | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")"
@@ -494,10 +494,10 @@ else
             i=$(($i+1))
             done
             echo ""
-            echo -n 'please give me the new IPAddress uhttpd should listen on: '
+            echo -n 'please give me the new IPAddress uhttpd should listen on instead of $1: '
             read pick
             cp /etc/config/uhttpd /etc/config/uhttpd.old
-            vi -c %s/$1/${local_addresses[$pick]}/gc -c q! /etc/config/uhttpd
+            vi -c %s/$1/${local_addresses[$pick]}/gc -c wq! /etc/config/uhttpd
             /etc/init.d/uhttpd restart
             ;;
         n)
