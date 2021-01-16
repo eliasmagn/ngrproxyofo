@@ -442,7 +442,7 @@ function done {
 
 
 #####################################################uhttpdconf############ ARGS ipaddress port ##########
-
+#ADD IPV6!!!!!!!!!!!!!!!!!!!!!
 
 function uhttpdconf {
 
@@ -461,7 +461,8 @@ else
             echo -n 'please give me the new port uhttpd should listen on instead of' "$2"': '
             read port
             cp /etc/config/uhttpd /etc/config/uhttpd.old
-            vi -c %s/$1:$2/0.0.0.0:$port/gc -c wq! /etc/config/uhttpd
+            vi -c %s/0.0.0.0:$2/0.0.0.0:$port/gc -c wq! /etc/config/uhttpd
+            vi -c %s/$1:$2/$1:$port/gc -c wq! /etc/config/uhttpd
             /etc/init.d/uhttpd restart
             ;;
         a)  #/etc/config/uhttpd
@@ -477,6 +478,7 @@ else
             echo -n 'please give me the new IPAddress uhttpd should listen on instead of '"$1"': '
             read pick
             cp /etc/config/uhttpd /etc/config/uhttpd.old
+            vi -c %s/0.0.0.0/${local_addresses[$pick]}/gc -c wq! /etc/config/uhttpd
             vi -c %s/$1/${local_addresses[$pick]}/gc -c wq! /etc/config/uhttpd
             /etc/init.d/uhttpd restart
             ;;
@@ -484,7 +486,8 @@ else
             echo -n 'please give me the new port uhttpd should listen on instead of '"$2"': '
             read port
             cp /etc/config/uhttpd /etc/config/uhttpd.old
-            vi -c %s/$1:$2/0.0.0.0:$port/gc -c wq! /etc/config/uhttpd
+            vi -c %s/0.0.0.0:$2/0.0.0.0:$port/gc -c wq! /etc/config/uhttpd            
+            vi -c %s/$1:$2/$1:$port/gc -c wq! /etc/config/uhttpd
             echo 'local ip addresses'
             i=0
             local_addresses="$(ip a | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([0-9]{1,2})" | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")"
@@ -497,6 +500,7 @@ else
             echo -n 'please give me the new IPAddress uhttpd should listen on instead of '"$1"': '
             read pick
             cp /etc/config/uhttpd /etc/config/uhttpd.old
+            vi -c %s/0.0.0.0/${local_addresses[$pick]}/gc -c wq! /etc/config/uhttpd
             vi -c %s/$1/${local_addresses[$pick]}/gc -c wq! /etc/config/uhttpd
             /etc/init.d/uhttpd restart
             ;;
