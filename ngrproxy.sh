@@ -266,9 +266,8 @@ EOF
   else 
     echo $?
     echo "could not create file: /etc/nginx/rproxy-sites_available/$FQDN.conf"
-  return 1
+    return 1
   fi
-fi
 else 
   echo "/etc/nginx/rproxy-sites_available/$FQDN.conf exists -- creation omitted "
   return 0
@@ -298,20 +297,20 @@ cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
        }
 }
 ####server_$FQDN
-EOF
-else
-  echo "you have to transfer the file which will be created by the acme.sh in"
-  echo "/var/www/$FQDN/.well-known/acme-challenge/SOMEFILE"
-  echo "to the server root serving on port 80"
-  echo "do you want to continue"
-  if yesorno; then
-    manfileacme=true
+EOF     
   else
-    echo "ok exiting script"
-    exit 1
+    echo "you have to transfer the file which will be created by the acme.sh in"
+    echo "/var/www/$FQDN/.well-known/acme-challenge/SOMEFILE"
+    echo "to the server root serving on port 80"
+    echo "do you want to continue"
+    if yesorno; then
+      manfileacme=true
+    else
+      echo "ok exiting script"
+      exit 1
+    fi
   fi
 fi
-
 }
 
 ##################################NGINCONF443### ARGS $1=ipaddresstobeproxied $2=FQDN ###########
@@ -357,7 +356,7 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
   echo "#"
   mkdir -p /etc/nginx/acme.sh/$FQDN
 
- if [[ ! -f /etc/nginx/dh4096.pem ]]; then
+  if [[ ! -f /etc/nginx/dh4096.pem ]]; then
 
     echo "creating diffi hellman file! in /etc/nginx/dh4096.pem"
     openssl dhparam -out /etc/nginx/dh4096.pem 4096
@@ -462,11 +461,12 @@ EOF
       ln -s /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf /etc/nginx/rproxy-sites_ssl_enabled/$FQDN.conf
       if nginx -t >/dev/null; then
         echo "nginx running fine with new config" 
+      fi
     fi
   else 
-  echo $?
-  echo "could not create file: /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
-  return 1
+    echo $?
+    echo "could not create file: /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
+    return 1
   fi
 fi
 }
@@ -732,8 +732,8 @@ if [[ $? == 0 ]]; then
     exit 1
   fi
 else 
-echo "aborted script due to faults!"
-exit 1
+  echo "aborted script due to faults!"
+  exit 1
 fi
 } 
 
@@ -755,26 +755,35 @@ if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-releas
   openwrt=true
 fi
 getargs $@
-if [[ -n $http ]]; then
-  nginxconf80 "$rem_address" "$FQDN"
-elif [[ -n $https ]]; then
-  if ls acme.sh >/dev/null 2>&1; then
-    echo "acme.sh found https enabled"
-    acme=true
-    acmesh="$PWD/acme.sh"
+
+echo "local ips: ${local_ips[@]}"
+echo "http port: $http"
+echo "https: $https"
+echo "address to be proxied: $rem_address"
+echo "Domain : $FQDN"
+if [[ -n $http ]] || [[ -n $http ]]; then
+  if [[ -n $http ]]; then
     nginxconf80 "$rem_address" "$FQDN"
-  else
-    echo "we need to download acme.sh should we now (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
-    if yesorno; then
-      curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
+  fi
+  if [[ -n $https ]]; then
+    if ls acme.sh >/dev/null 2>&1; then
+      echo "acme.sh found https enabled"
+      acme=true
       acmesh="$PWD/acme.sh"
       nginxconf80 "$rem_address" "$FQDN"
     else
-      echo "without acme.sh https configuration is currently not supported" 
-      echo "exiting" 
-      exit 1;
+      echo "we need to download acme.sh y/n (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
+      if yesorno; then
+        curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
+        acmesh="$PWD/acme.sh"
+        nginxconf80 "$rem_address" "$FQDN"
+      else
+        echo "without acme.sh https configuration is currently not supported" 
+        echo "exiting" 
+        exit 1
+      fi
     fi
-  fi
+  fi  
 else
   echo 'nope?'
   helpme
