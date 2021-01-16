@@ -458,7 +458,7 @@ else
     case $pan in
   
         p)  #/etc/config/uhttpd
-            echo -n 'please give me the new port uhttpd should listen on instead of $2: '
+            echo -n 'please give me the new port uhttpd should listen on instead of' "$2"': '
             read port
             cp /etc/config/uhttpd /etc/config/uhttpd.old
             vi -c %s/$1:$2/0.0.0.0:$port/gc -c wq! /etc/config/uhttpd
@@ -474,14 +474,14 @@ else
             i=$(($i+1))
             done
             echo ""
-            echo -n 'please give me the new IPAddress uhttpd should listen on instead of $1: '
+            echo -n 'please give me the new IPAddress uhttpd should listen on instead of '"$1"': '
             read pick
             cp /etc/config/uhttpd /etc/config/uhttpd.old
             vi -c %s/$1/${local_addresses[$pick]}/gc -c wq! /etc/config/uhttpd
             /etc/init.d/uhttpd restart
             ;;
         pa)
-            echo -n 'please give me the new port uhttpd should listen on instead of $2: '
+            echo -n 'please give me the new port uhttpd should listen on instead of '"$2"': '
             read port
             cp /etc/config/uhttpd /etc/config/uhttpd.old
             vi -c %s/$1:$2/0.0.0.0:$port/gc -c wq! /etc/config/uhttpd
@@ -494,7 +494,7 @@ else
             i=$(($i+1))
             done
             echo ""
-            echo -n 'please give me the new IPAddress uhttpd should listen on instead of $1: '
+            echo -n 'please give me the new IPAddress uhttpd should listen on instead of '"$1"': '
             read pick
             cp /etc/config/uhttpd /etc/config/uhttpd.old
             vi -c %s/$1/${local_addresses[$pick]}/gc -c wq! /etc/config/uhttpd
