@@ -450,7 +450,7 @@ if [[ $openwrt != true ]]; then
   echo "not runing openwrt, you have to reconfigure that yourself"
 else
   echo "nice openwrt detected"
-  while [[ $(netstat -l -p -n | grep -E 0.0.0.0:80 | grep -q uhttpd) -eq 0 ]] || [[ $(netstat -l -p -n | grep -E $1:$2 | grep -q uhttpd) -eq 0 ]]; 
+  while [[ $(netstat -l -p -n | grep -E 0.0.0.0:$2 | grep -q uhttpd) -eq 0 ]] || [[ $(netstat -l -p -n | grep -E $1:$2 | grep -q uhttpd) -eq 0 ]]; 
   do
     echo 'uhttpd-config backup will be created as /etc/config/uhttpd.old'
     echo -n 'Should i change the port of uhttpd(p), its listen address(a), both(pa) or nothing(n) pls enter(p/a/pa/n)?: '
