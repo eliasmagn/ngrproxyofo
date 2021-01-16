@@ -16,16 +16,6 @@
 #./acme.sh --install
 #
 
-echo "simple nginx reverse proxy configuration with acme support"
-echo "install nginx with ssl compile option"
-echo "nginx will be listen on port 80 and 443 by default"  
-local_ips=""
-startdir=$PWD
-if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-release | grep -q OpenWrt) -eq 0 ]]; then
-echo "running on openwrt"
-openwrt=true
-fi
-
 
 ######################################################DISCLAIMER#################################
 function disclaimer {
@@ -220,7 +210,7 @@ PROXY_READ_TIMEOUT="90"
 PROXY_BUFFERS="32 4k"
 
 
-cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << "EOF"
+cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
 
 ####server_$FQDN
     server {
@@ -345,7 +335,7 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
   SSL_PROTOCOLS='TLSv1.'"$SSLPV"
 
 
-  cat >> /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf << "EOF"
+  cat >> /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf << EOF
 
 ####server_$FQDN
     server {
@@ -674,11 +664,45 @@ fi
 
 ########################################################SCRIPT#######################
 
+
+echo "simple nginx reverse proxy configuration with letsencrypt acme if needed"
+echo "install nginx with ssl compile option"
+echo "nginx will be listen on port 80 and 443 by default"  
+
+local_ips=""
+http=""
+https=""
+rem_address=""
+FQDN=""
+startdir=$PWD
+if [[ -z https ]]; then
+  echo "https omitted"
+else
+  if ls acme.sh; then
+    echo "acme.sh found https enabled"
+    acme=true
+    acmesh="$PWD/acme.sh"
+  else
+    echo "we need to download acme.sh should we now (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
+    if yesorno; then
+      curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
+    else
+      echo "without acme.sh https configuration is currently not supported" 
+      echo "exiting" 
+      exit 1;
+    fi
+  fi
+fi  
+if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-release | grep -q OpenWrt) -eq 0 ]]; then
+  echo "running on openwrt"
+  openwrt=true
+fi
+
 getargs $@
 if [[ $https ]]; then
-  nginxconf443 "$rem_address" "$FQDN"
-elif [[ $http ]]; then
   nginxconf80 "$rem_address" "$FQDN"
+elif [[ $http ]]; then
+  nginxconf443 "$rem_address" "$FQDN"
 else
 echo 'nope?'
 helpme
