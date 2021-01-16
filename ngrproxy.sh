@@ -675,9 +675,8 @@ https=""
 rem_address=""
 FQDN=""
 startdir=$PWD
-if [[ -z https ]]; then
-  echo "https omitted"
-else
+getargs $@
+if [[ -n https ]]; then
   if ls acme.sh; then
     echo "acme.sh found https enabled"
     acme=true
