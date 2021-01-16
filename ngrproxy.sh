@@ -49,7 +49,7 @@ while [[ $ask == true ]]; do
             return 0
             ;;
   
-        [nN] | [n|N][O|o] )
+        [nN] | [Nn][Oo] )
             ask=false
             echo 'n'
             return 1
@@ -167,14 +167,20 @@ done
 #####################################NGINCONF80### ARGS $1=ipaddresstobeproxied $2=FQDN ###########
 function nginxconf80 {
 PROXYIP=$1
-FQDN=$1
-
-echo "using $PROXYIP for $FQDN"
-echo "setting up directory /var/www/$FQDN"
+FQDN=$2
+echo "######## creating http config for $FQDN ########"  
+echo ""
+echo "webserver @ $PROXYIP will be served as $FQDN"
+echo "setting up directories"
+echo "/var/www/$FQDN"
 mkdir -p /var/www/$FQDN
-mkdir -p /etc/nginx/rproxy-sites_available
-mkdir -p /etc/nginx/rproxy-sites_enabled
+echo "/var/www/$FQDN/.well-known/acme_challenge/"
 mkdir -p /var/www/$FQDN/.well-known/acme_challenge/
+echo "/etc/nginx/rproxy-sites_available"
+mkdir -p /etc/nginx/rproxy-sites_available
+echo "/etc/nginx/rproxy-sites_enabled"
+mkdir -p /etc/nginx/rproxy-sites_enabled
+echo ""
 HTTP_HOST='$http_host'
 REMOTE_ADDR='$remote_addr'
 PROXY_ADD_X_FORWARDED_FOR='$proxy_add_x_forwarded_for'
@@ -247,13 +253,66 @@ cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
 
  }
 ####server_$FQDN
-
 EOF
 ####configFILEend
+
+  if [[ -f /etc/nginx/rproxy-sites_available/$FQDN.conf ]]; then
+    echo "wrote /etc/nginx/rproxy-sites_available/$FQDN.conf"
+    return 0
+    echo "should we create a symbolic link to enable the new configuration?"
+    if yesorno; then
+      ln -s /etc/nginx/rproxy-sites_available/$FQDN.conf /etc/nginx/rproxy-sites_enabled/$FQDN.conf
+    fi
+  else 
+    echo $?
+    echo "could not create file: /etc/nginx/rproxy-sites_available/$FQDN.conf"
+  return 1
+  fi
+fi
+else 
+  echo "/etc/nginx/rproxy-sites_available/$FQDN.conf exists -- creation omitted "
+  return 0
+fi
+}
+
+function ngxwellknown80 {
+
+if [[ ! -f /etc/nginx/rproxy-sites_enabled/$FQDN.conf ]]; then
+  echo "LetsEncrypt needs a minimal server running on port 80 to verify origin of the domain!"
+  echo "create it?"
+  if yesorno; then 
+
+cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
+
+####server_$FQDN
+    server {
+        server_name   $FQDN;
+        server_name   www.$FQDN;
+        $(clisten $http)
+
+        error_page    500 502 503 504  /50x.html;
+
+        location      /.well-known/acme-challenge/ {
+            root      /var/www/$FQDN/;
+
+       }
+}
+####server_$FQDN
+EOF
+else
+  echo "you have to transfer the file which will be created by the acme.sh in"
+  echo "/var/www/$FQDN/.well-known/acme-challenge/SOMEFILE"
+  echo "to the server root serving on port 80"
+  echo "do you want to continue"
+  if yesorno; then
+    manfileacme=true
+  else
+    echo "ok exiting script"
+    exit 1
+  fi
 fi
 
 }
-
 
 ##################################NGINCONF443### ARGS $1=ipaddresstobeproxied $2=FQDN ###########
 function nginxconf443 {
@@ -261,13 +320,15 @@ function nginxconf443 {
 PROXYIP=$1
 FQDN=$2
 
-echo "using $PROXYIP for $FQDN"
-echo "setting up directories "# /var/www/$FQDN
-echo "#"
-mkdir -p /var/www/$FQDN
+echo "######## creating http config for $FQDN ########"  
+echo ""
+echo "webserver @ $PROXYIP will be served as $FQDN"
+echo "setting up directories"
+echo "/etc/nginx/rproxy-sites_ssl_available"
 mkdir -p /etc/nginx/rproxy-sites_ssl_available
+echo "/etc/nginx/rproxy-sites_ssl_enabled"
 mkdir -p /etc/nginx/rproxy-sites_ssl_enabled
-mkdir -p /var/www/$FQDN/.well-known/acme_challenge/
+echo ""
 HTTP_HOST='$http_host'
 REMOTE_ADDR='$remote_addr'
 PROXY_ADD_X_FORWARDED_FOR='$proxy_add_x_forwarded_for'
@@ -305,7 +366,7 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
   echo "issuing letsencrypt certificates"
   echo "used command:"
   echo "./root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN -ecc --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force > acme_ngrpconf_443.log"
-  echo "acme.sh autput is stored in acme-$FQDN-443.log"
+  echo "acme.sh output is stored in acme-$FQDN-443.log"
   /root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN-443.log
 
 
@@ -393,6 +454,20 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
 
 EOF
 ####configFILEend
+  if [[ -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
+    echo "wrote /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
+    return 0
+    echo "should we create a symbolic link to enable the new configuration?"
+    if yesorno; then
+      ln -s /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf /etc/nginx/rproxy-sites_ssl_enabled/$FQDN.conf
+      if nginx -t >/dev/null; then
+        echo "nginx running fine with new config" 
+    fi
+  else 
+  echo $?
+  echo "could not create file: /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
+  return 1
+  fi
 fi
 }
 
