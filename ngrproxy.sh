@@ -675,34 +675,33 @@ https=""
 rem_address=""
 FQDN=""
 startdir=$PWD
+if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-release | grep -q OpenWrt) -eq 0 ]]; then
+  echo "running on openwrt"
+  openwrt=true
+fi
 getargs $@
-if [[ -n https ]]; then
-  if ls acme.sh; then
+if [[ -n $http ]]; then
+  nginxconf80 "$rem_address" "$FQDN"
+elif [[ -n $https ]]; then
+  if ls acme.sh >/dev/null 2>&1; then
     echo "acme.sh found https enabled"
     acme=true
     acmesh="$PWD/acme.sh"
+    nginxconf80 "$rem_address" "$FQDN"
   else
     echo "we need to download acme.sh should we now (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
     if yesorno; then
       curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
+      acmesh="$PWD/acme.sh"
+      nginxconf80 "$rem_address" "$FQDN"
     else
       echo "without acme.sh https configuration is currently not supported" 
       echo "exiting" 
       exit 1;
     fi
   fi
-fi  
-if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-release | grep -q OpenWrt) -eq 0 ]]; then
-  echo "running on openwrt"
-  openwrt=true
-fi
-
-getargs $@
-if [[ $https ]]; then
-  nginxconf80 "$rem_address" "$FQDN"
-elif [[ $http ]]; then
-  nginxconf443 "$rem_address" "$FQDN"
 else
-echo 'nope?'
-helpme
+  echo 'nope?'
+  helpme
+  return 1
 fi
