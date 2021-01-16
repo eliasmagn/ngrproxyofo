@@ -540,7 +540,10 @@ else
   if [[ $? -ne 0 ]] || [[ $openwrt != true ]]; then
       echo "choose different port or ip for one of the services and try again."
   else
-    uhttpdconf $1 $2
+   # uhttpdconf $1 $2
+   echo "CHANGE PORT OR IPADDRESS OF UHTTPD!"
+   echo "CHANGE PORT OR IPADDRESS OF UHTTPD!"
+   echo "CHANGE PORT OR IPADDRESS OF UHTTPD!"
   fi
   echo '###########################################################'
 fi
