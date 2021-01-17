@@ -484,7 +484,7 @@ function testnginxconf {
   if [[ $? -ne 0 ]]; then
     echo "Nginx config is faulty pls be kind and examine /etc/nginx/rproxy-sites/$FQDN.conf"
     echo "and /etc/nginx/nginx.conf!"
-    else
+  else
     echo "echo config looks good starting nginx"
     /etc/init.d/nginx restart
   fi
@@ -536,8 +536,8 @@ else
             local_addresses="$(ip a | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([0-9]{1,2})" | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")"
             for ip in ${local_addresses[@]}
             do 
-            echo "$i: $ip"
-            i=$(($i+1))
+              echo "$i: $ip"
+              i=$(($i+1))
             done
             echo ""
             echo -n 'please give me the new IPAddress uhttpd should listen on instead of '"$1"': '
@@ -558,8 +558,8 @@ else
             local_addresses="$(ip a | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([0-9]{1,2})" | grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")"
             for ip in ${local_addresses[@]}
             do 
-            echo "$i: $ip"
-            i=$(($i+1))
+              echo "$i: $ip"
+              i=$(($i+1))
             done
             echo ""
             echo -n 'please give me the new IPAddress uhttpd should listen on instead of '"$1"': '
