@@ -226,8 +226,10 @@ cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
 
         error_page    500 502 503 504  /50x.html;
 
+        location      /ngrproxy/ { root      /var/www/$FQDN/; }
+
         location      /.well-known/acme-challenge/ {
-            root      /var/www/$FQDN/;
+            root      /var/www/$FQDN/.well-known/acme-challenge/;
 
        }
 
@@ -258,11 +260,35 @@ EOF
 
   if [[ -f /etc/nginx/rproxy-sites_available/$FQDN.conf ]]; then
     echo "wrote /etc/nginx/rproxy-sites_available/$FQDN.conf"
-    return 0
     echo "should we create a symbolic link to enable the new configuration?"
     if yesorno; then
       ln -s /etc/nginx/rproxy-sites_available/$FQDN.conf /etc/nginx/rproxy-sites_enabled/$FQDN.conf
+      if nginx -t; then
+        if [[ openwrt == true ]]; then 
+          /etc/init.d/nginx stop 
+          /etc/init.d/nginx start
+        else
+          systemctl stop nginx
+          systemctl start nginx
+        fi
+        ident="$(dd if=/dev/urandom bs=3 count=1 | sha256sum)"
+        echo "ident" > /var/www/$FQDN/ident
+        if curl http://$FQDN/ident | grep -q "$ident"; then
+          echo "nginx just serving fine. from local filesystem"
+          echo "you need to test the remote server on your own (proxy function)"
+          echo "to do so go to http://$FQDN with your http client/browser software"
+        else 
+          echo "There is an issue with your network."
+        fi
+        rm /var/www/$FQDN/ident
+      else 
+        echo "There is an unknown issue with nginx pls resolve it yourself"
+        nginx -t
+        echo "exiting"                                                                          ###should we offer to delete changes ?
+        exit 1
+      fi  
     fi
+    return 0
   else 
     echo $?
     echo "could not create file: /etc/nginx/rproxy-sites_available/$FQDN.conf"
@@ -363,7 +389,7 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
     openssl dhparam -out /etc/nginx/dh4096.pem 4096
   fi
 ask='y'
-while [[ $ask == 'y' ]] do
+while [[ $ask == 'y' ]]; do
   
   echo "issuing letsencrypt certificates"
   echo "used command:"
@@ -375,8 +401,9 @@ while [[ $ask == 'y' ]] do
     grep "$FQDN:Verify error" acme_ngrpconf-$FQDN-$https.log
     if grep -q "refused" acme_ngrpconf-$FQDN-$https.log; then
       echo "Connection was refused looks like a firewall issue."
-      echo "we can wait here.. till you looked for your firewall."
-      echo 'Just tell me if you want to retry? Yes/No '
+    fi
+    echo "we can wait here.. till you solved that issue or just restart the script later."
+    echo 'Just tell me if you want to retry? Yes/No '
     ask=yesorno
   else
     ask='n'
@@ -419,10 +446,10 @@ done
 
         error_page    500 502 503 504  /50x.html;
 
-	ssl on;
-	ssl_certificate /etc/nginx/acme.sh/$FQDN/fullchain.pem;
-	ssl_certificate_key     /etc/nginx/acme.sh/$FQDN/key.pem;
- 	ssl_trusted_certificate /etc/nginx/acme.sh/$FQDN/cert.pem;
+	      ssl on;
+	      ssl_certificate /etc/nginx/acme.sh/$FQDN/fullchain.pem;
+	      ssl_certificate_key     /etc/nginx/acme.sh/$FQDN/key.pem;
+ 	      ssl_trusted_certificate /etc/nginx/acme.sh/$FQDN/cert.pem;
         ssl_prefer_server_ciphers on;
         ssl_protocols $SSL_PROTOCOLS;  #enable tlsv1.3 with nginx 1.13 or higher
         ssl_dhparam /etc/nginx/dh4096.pem;
@@ -442,24 +469,26 @@ done
         add_header X-Content-Type-Options nosniff;
         add_header X-XSS-Protection "1; mode=block";
 
-         location / {
-               add_header       X-Host          $HOST;
-               proxy_set_header        Host            $HTTP_HOST;
-               proxy_set_header        X-Real-IP       $REMOTE_ADDR;
-               proxy_pass_request_headers on;
-               proxy_set_header X-Forwarded-For $PROXY_ADD_X_FORWARDED_FOR;
-               proxy_set_header X-Forwarded-Host $HOST;
-               proxy_set_header X-Forwarded-Proto $SCHEME;
-               proxy_set_header X-Forwarded-Server $HTTP_HOST;
-               client_max_body_size    $CLIENT_MAX_BODY_SIZE;
-               client_body_buffer_size $CLIENT_BODY_BUFFER_SIZE;
-               proxy_connect_timeout   $PROXY_CONNECT_TIMEOUT;
-               proxy_send_timeout      $PROXY_SEND_TIMEOUT;
-               proxy_read_timeout      $PROXY_READ_TIMEOUT;
-               proxy_buffers           $PROXY_BUFFERS;
-               $PROXY_PASS
-               $PROXY_SSL_VERIFY
-          }
+        location      /ngrproxy/ { root      /var/www/$FQDN/; }
+
+        location / {
+              add_header       X-Host          $HOST;
+              proxy_set_header        Host            $HTTP_HOST;
+              proxy_set_header        X-Real-IP       $REMOTE_ADDR;
+              proxy_pass_request_headers on;
+              proxy_set_header X-Forwarded-For $PROXY_ADD_X_FORWARDED_FOR;
+              proxy_set_header X-Forwarded-Host $HOST;
+              proxy_set_header X-Forwarded-Proto $SCHEME;
+              proxy_set_header X-Forwarded-Server $HTTP_HOST;
+              client_max_body_size    $CLIENT_MAX_BODY_SIZE;
+              client_body_buffer_size $CLIENT_BODY_BUFFER_SIZE;
+              proxy_connect_timeout   $PROXY_CONNECT_TIMEOUT;
+              proxy_send_timeout      $PROXY_SEND_TIMEOUT;
+              proxy_read_timeout      $PROXY_READ_TIMEOUT;
+              proxy_buffers           $PROXY_BUFFERS;
+              $PROXY_PASS
+              $PROXY_SSL_VERIFY
+        }
 
 
  }
@@ -469,16 +498,36 @@ EOF
 ####configFILEend
   if [[ -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
     echo "wrote /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
-    return 0
     echo "should we create a symbolic link to enable the new configuration?"
     if yesorno; then
       ln -s /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf /etc/nginx/rproxy-sites_ssl_enabled/$FQDN.conf
-      if nginx -t >/dev/null; then
-        echo "nginx running fine with new config" 
-      fi
+      if nginx -t; then
+        if [[ openwrt == true ]]; then 
+          /etc/init.d/nginx stop 
+          /etc/init.d/nginx start
+        else
+          systemctl stop nginx
+          systemctl start nginx
+        fi
+        ident="$(dd if=/dev/urandom bs=3 count=1 | sha256sum)"
+        echo "ident" > /var/www/$FQDN/ident
+        if curl https://$FQDN/ident | grep -q "$ident"; then
+          echo "nginx just serving fine. from local filesystem"
+          echo "you need to test the remote server on your own (proxy function)"
+          echo "to do so go to https://$FQDN with your http client/browser software"
+        else 
+          echo "There is an issue with your network."
+        fi
+        rm /var/www/$FQDN/ident
+        
+      else 
+        echo "There is an unknown issue with nginx pls resolve it yourself"
+        nginx -t
+        echo "exiting"                                                                          ###should we offer to delete changes ?
+        exit 1
+      fi  
     fi
   else 
-    echo $?
     echo "could not create file: /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
     return 1
   fi
