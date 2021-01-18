@@ -872,7 +872,7 @@ if [[ -n $http ]] || [[ -n $http ]]; then
     echo 'do you want me to create a default nginx conf compatible with this script,'
     echo 'backup of current config file will be at /etc/nginx/nginx.conf.old ? Yes/No'
     if yesorno; then
-      mv /nginx/nginx.conf /etc/nginx/nginx.conf.old
+      mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.old
       ngrconfID="#ngrconfid# id = $(dd if=/dev/urandom bs=6 count=1 | sha256sum)"                     ###########for future features 
       nginxconf
     else
