@@ -278,7 +278,7 @@ $(clisten $http)
         location      /ngrproxy { alias      /var/www/$FQDN/ident; }
 
         location      /.well-known/acme-challenge/ {
-            root      /var/www/$FQDN/.well-known/acme-challenge/;
+            root      /var/www/$FQDN/;
 
        }
 
