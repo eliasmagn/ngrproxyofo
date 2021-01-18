@@ -138,7 +138,7 @@ do
     echo "$1 POINTS ON $ip WHICH IS not found on local interface"
   else
     echo "$ip found $1 is pointing on me"
-    local_ips+="$ip"
+    local_ips+=($ip)
   fi
 done
 if [[ -z local_ips ]]; then
@@ -154,11 +154,14 @@ fi
 
 } 
 
+#####################################CLISTEN### ARGS ?????????????????? ###########
+
+
 function clisten {
 
 for ip in ${local_ips[@]}
 do
-  echo "listen      $ip $1;"
+  echo "        listen      $ip:$1;"
 done
 
 }
@@ -264,7 +267,7 @@ cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
     server {
         server_name   $FQDN;
         server_name   www.$FQDN;
-        $(clisten $http)
+$(clisten $http)
 
         error_page    500 502 503 504  /50x.html;
 
