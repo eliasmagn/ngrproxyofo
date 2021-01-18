@@ -141,7 +141,7 @@ do
     local_ips+="$ip"
   fi
 done
-if [[ -n local_ips ]]; then
+if [[ -z local_ips ]]; then
     echo "$ip not found on local interface"
     echo "The address of domain $1 is not pointing on any local interface(ping command) -> abort script? (y/n)"
     yesorno
@@ -362,13 +362,26 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
     echo "creating diffi hellman file! in /etc/nginx/dh4096.pem"
     openssl dhparam -out /etc/nginx/dh4096.pem 4096
   fi
-
+ask='y'
+while [[ $ask == 'y' ]] do
+  
   echo "issuing letsencrypt certificates"
   echo "used command:"
-  echo "./root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN -ecc --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force > acme_ngrpconf_443.log"
-  echo "acme.sh output is stored in acme-$FQDN-443.log"
-  /root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN-443.log
-
+  echo "acmesh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN -ecc --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force > acme_ngrpconf_$https.log"
+  echo "acme.sh output is stored in acme_ngrpconf-$FQDN-$https.log"
+  $acmesh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN_$https.log
+  if [[ $? -ne 0 ]]; then
+    echo 'Issueing certificate was not successfull.'
+    grep "$FQDN:Verify error" acme_ngrpconf-$FQDN-$https.log
+    if grep -q "refused" acme_ngrpconf-$FQDN-$https.log; then
+      echo "Connection was refused looks like a firewall issue."
+      echo "we can wait here.. till you looked for your firewall."
+      echo 'Just tell me if you want to retry? Yes/No '
+    ask=yesorno
+  else
+    ask='n'
+  fi
+done
 
 ####configFILE
   SSL_ECDH_CURVE='secp384r1';
