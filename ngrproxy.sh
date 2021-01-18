@@ -173,7 +173,7 @@ WORKER_CONNECTIONS=512
 
 cat >> /etc/nginx/nginx.conf << EOF
 ####This file is created by the ngrproxy script.
-#ngrconfid# id = $ngrconfID
+$ngrconfID
 
 worker_processes  $WORKER_PROCESSES;
 user nobody nogroup;
@@ -877,7 +877,7 @@ else
   echo "do you want me to create a default nginx conf compatible with this script? Yes/No"
   if yesorno; then
     mv /nginx/nginx.conf /etc/nginx/nginx.conf.old
-    ngrconfID="$(dd if=/dev/urandom bs=6 count=1 | sha256sum)"
+    ngrconfID="#ngrconfid# id = $(dd if=/dev/urandom bs=6 count=1 | sha256sum)"                     ###########for future features 
     nginxconf
   else
     echo "you need to at least include the following directories  in the extisting nginx conf"
@@ -887,6 +887,7 @@ else
    # echo 'do you want me to do this? Yes/No'
    # if yesorno; then                                                                             ########later to add
    # fi 
+  fi
   if [[ -n $http ]]; then
     nginxconf80 "$rem_address" "$FQDN"
   fi
