@@ -317,159 +317,159 @@ function ngxwellknown80 {
 ##################################NGINCONF443### ARGS $1=ipaddresstobeproxied $2=FQDN ###########
 function nginxconf443 {
 
-# PROXYIP=$1
-# FQDN=$2
+PROXYIP=$1
+FQDN=$2
 
-# echo "######## creating http config for $FQDN ########"  
-# echo ""
-# echo "webserver @ $PROXYIP will be served as $FQDN"
-# echo "setting up directories"
-# echo "/etc/nginx/rproxy-sites_ssl_available"
-# mkdir -p /etc/nginx/rproxy-sites_ssl_available
-# echo "/etc/nginx/rproxy-sites_ssl_enabled"
-# mkdir -p /etc/nginx/rproxy-sites_ssl_enabled
-# echo ""
-# HTTP_HOST='$http_host'
-# REMOTE_ADDR='$remote_addr'
-# PROXY_ADD_X_FORWARDED_FOR='$proxy_add_x_forwarded_for'
-# SCHEME='$scheme'
-# HOST='$host'
-# echo "Set proxy pass to https? Yes/No?"
-# yesorno
-# if [[ $? -eq 0 ]]; then
-#   PROXY_PASS="proxy_pass https://$PROXYIP;"
-#   echo "set proxy_ssl_verify on ? Yes/No?"
-#   yesorno
-#   if [[ $? -eq 0 ]]; then
-#     echo "set to on!"
-#     PROXY_SSL_VERIFY='proxy_ssl_verify on;'
-#   else
-#     echo "set to off!"
-#     PROXY_SSL_VERIFY='proxy_ssl_verify off;'
-#   fi
-# else
-#   PROXY_PASS="proxy_pass http://$PROXYIP;"
-# fi
-# echo ""
-# if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
-#   echo "setting up directory /etc/nginx/acme.sh/$FQDN"
-#   echo "for certificates"
-#   echo "#"
-#   mkdir -p /etc/nginx/acme.sh/$FQDN
+echo "######## creating http config for $FQDN ########"  
+echo ""
+echo "webserver @ $PROXYIP will be served as $FQDN"
+echo "setting up directories"
+echo "/etc/nginx/rproxy-sites_ssl_available"
+mkdir -p /etc/nginx/rproxy-sites_ssl_available
+echo "/etc/nginx/rproxy-sites_ssl_enabled"
+mkdir -p /etc/nginx/rproxy-sites_ssl_enabled
+echo ""
+HTTP_HOST='$http_host'
+REMOTE_ADDR='$remote_addr'
+PROXY_ADD_X_FORWARDED_FOR='$proxy_add_x_forwarded_for'
+SCHEME='$scheme'
+HOST='$host'
+echo "Set proxy pass to https? Yes/No?"
+yesorno
+if [[ $? -eq 0 ]]; then
+  PROXY_PASS="proxy_pass https://$PROXYIP;"
+  echo "set proxy_ssl_verify on ? Yes/No?"
+  yesorno
+  if [[ $? -eq 0 ]]; then
+    echo "set to on!"
+    PROXY_SSL_VERIFY='proxy_ssl_verify on;'
+  else
+    echo "set to off!"
+    PROXY_SSL_VERIFY='proxy_ssl_verify off;'
+  fi
+else
+  PROXY_PASS="proxy_pass http://$PROXYIP;"
+fi
+echo ""
+if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
+  echo "setting up directory /etc/nginx/acme.sh/$FQDN"
+  echo "for certificates"
+  echo "#"
+  mkdir -p /etc/nginx/acme.sh/$FQDN
 
-#   if [[ ! -f /etc/nginx/dh4096.pem ]]; then
+  if [[ ! -f /etc/nginx/dh4096.pem ]]; then
 
-#     echo "creating diffi hellman file! in /etc/nginx/dh4096.pem"
-#     openssl dhparam -out /etc/nginx/dh4096.pem 4096
-#   fi
+    echo "creating diffi hellman file! in /etc/nginx/dh4096.pem"
+    openssl dhparam -out /etc/nginx/dh4096.pem 4096
+  fi
 
-#   echo "issuing letsencrypt certificates"
-#   echo "used command:"
-#   echo "./root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN -ecc --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force > acme_ngrpconf_443.log"
-#   echo "acme.sh output is stored in acme-$FQDN-443.log"
-#   /root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN-443.log
-
-
-# ####configFILE
-#   SSL_ECDH_CURVE='secp384r1';
-#   SSL_SESSION_TIMEOUT="10"'m';
-#   SSL_SESSION_CACHE='shared:SSL:'"10"'m';
-#   CLIENT_MAX_BODY_SIZE="10"'m'
-#   CLIENT_BODY_BUFFER_SIZE="128"'k'
-#   PROXY_CONNECT_TIMEOUT="90"
-#   PROXY_SEND_TIMEOUT="90"
-#   PROXY_READ_TIMEOUT="90"
-#   NPB="32"
-#   SPB="8"
-#   PROXY_BUFFERS="$NPB $SPB"'k'
-#   ngv=$(nginx -V 2>&1 | grep version)
-#   ngv=${ngv%%'('*}
-#   ngv=$(echo ${ngv#[a-zA-Z0-9]*'/'} | tr -d '.')
-#   if [[ $ngv > 1000 ]]; then  
-#     ngv=$(( $ngv * 10 ))
-#   fi
-#   if [[ $ngv -lt 1130 ]]; then  
-#     SSLPV="3"
-#   else 
-#     SSLPV="2"
-#   fi
-#   SSL_PROTOCOLS='TLSv1.'"$SSLPV"
+  echo "issuing letsencrypt certificates"
+  echo "used command:"
+  echo "./root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN -ecc --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force > acme_ngrpconf_443.log"
+  echo "acme.sh output is stored in acme-$FQDN-443.log"
+  /root/acme.sh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN-443.log
 
 
-#   cat >> /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf << EOF
-
-# ####server_$FQDN
-#     server {
-#         server_name   $FQDN;
-#         server_name   www.$FQDN;
-#         $(clisten $https)
-
-#         error_page    500 502 503 504  /50x.html;
-
-# 	ssl on;
-# 	ssl_certificate /etc/nginx/acme.sh/$FQDN/fullchain.pem;
-# 	ssl_certificate_key     /etc/nginx/acme.sh/$FQDN/key.pem;
-#  	ssl_trusted_certificate /etc/nginx/acme.sh/$FQDN/cert.pem;
-#         ssl_prefer_server_ciphers on;
-#         ssl_protocols $SSL_PROTOCOLS;  #enable tlsv1.3 with nginx 1.13 or higher
-#         ssl_dhparam /etc/nginx/dh4096.pem;
-#       #	ssl_ciphers  EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:EECDH:EDH+aRSA:HIGH:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!SEED:!DSS:!CAMELLIA:!Medium;
-#         ssl_ciphers 'ECDHE:DHE:!AES128:HIGH:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!SEED:!DSS:!CAMELLIAD';
-#       #	ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!SEED:!DSS:!CAMELLIA:!Medium;
-#         ssl_ecdh_curve $SSL_ECDH_CURVE;
-#         ssl_session_timeout $SSL_SESSION_TIMEOUT;
-#         ssl_session_cache $SSL_SESSION_CACHE;
-#         #ssl_session_tickets off; #enable only for nginx > 1.5.9
-#         #ssl_stapling on; #enable only for nginx > 1.3.7
-#         #ssl_stapling_verify on; #enable only for nginx > 1.3.7
-#         #resolver $DNS-IP-1 $DNS-IP-2 valid=300s;
-#         #resolver_timeout 5s;
-#         add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload";
-#         add_header X-Frame-Options DENY;
-#         add_header X-Content-Type-Options nosniff;
-#         add_header X-XSS-Protection "1; mode=block";
-
-#          location / {
-#                add_header       X-Host          $HOST;
-#                proxy_set_header        Host            $HTTP_HOST;
-#                proxy_set_header        X-Real-IP       $REMOTE_ADDR;
-#                proxy_pass_request_headers on;
-#                proxy_set_header X-Forwarded-For $PROXY_ADD_X_FORWARDED_FOR;
-#                proxy_set_header X-Forwarded-Host $HOST;
-#                proxy_set_header X-Forwarded-Proto $SCHEME;
-#                proxy_set_header X-Forwarded-Server $HTTP_HOST;
-#                client_max_body_size    $CLIENT_MAX_BODY_SIZE;
-#                client_body_buffer_size $CLIENT_BODY_BUFFER_SIZE;
-#                proxy_connect_timeout   $PROXY_CONNECT_TIMEOUT;
-#                proxy_send_timeout      $PROXY_SEND_TIMEOUT;
-#                proxy_read_timeout      $PROXY_READ_TIMEOUT;
-#                proxy_buffers           $PROXY_BUFFERS;
-#                $PROXY_PASS
-#                $PROXY_SSL_VERIFY
-#           }
+####configFILE
+  SSL_ECDH_CURVE='secp384r1';
+  SSL_SESSION_TIMEOUT="10"'m';
+  SSL_SESSION_CACHE='shared:SSL:'"10"'m';
+  CLIENT_MAX_BODY_SIZE="10"'m'
+  CLIENT_BODY_BUFFER_SIZE="128"'k'
+  PROXY_CONNECT_TIMEOUT="90"
+  PROXY_SEND_TIMEOUT="90"
+  PROXY_READ_TIMEOUT="90"
+  NPB="32"
+  SPB="8"
+  PROXY_BUFFERS="$NPB $SPB"'k'
+  ngv=$(nginx -V 2>&1 | grep version)
+  ngv=${ngv%%'('*}
+  ngv=$(echo ${ngv#[a-zA-Z0-9]*'/'} | tr -d '.')
+  if [[ $ngv > 1000 ]]; then  
+    ngv=$(( $ngv * 10 ))
+  fi
+  if [[ $ngv -lt 1130 ]]; then  
+    SSLPV="3"
+  else 
+    SSLPV="2"
+  fi
+  SSL_PROTOCOLS='TLSv1.'"$SSLPV"
 
 
-#  }
-# ####server_$FQDN
+  cat >> /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf << EOF
 
-# EOF
-# ####configFILEend
-#   if [[ -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
-#     echo "wrote /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
-#     return 0
-#     echo "should we create a symbolic link to enable the new configuration?"
-#     if yesorno; then
-#       ln -s /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf /etc/nginx/rproxy-sites_ssl_enabled/$FQDN.conf
-#       if nginx -t >/dev/null; then
-#         echo "nginx running fine with new config" 
-#       fi
-#     fi
-#   else 
-#     echo $?
-#     echo "could not create file: /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
-#     return 1
-#   fi
-# fi
+####server_$FQDN
+    server {
+        server_name   $FQDN;
+        server_name   www.$FQDN;
+        $(clisten $https)
+
+        error_page    500 502 503 504  /50x.html;
+
+	ssl on;
+	ssl_certificate /etc/nginx/acme.sh/$FQDN/fullchain.pem;
+	ssl_certificate_key     /etc/nginx/acme.sh/$FQDN/key.pem;
+ 	ssl_trusted_certificate /etc/nginx/acme.sh/$FQDN/cert.pem;
+        ssl_prefer_server_ciphers on;
+        ssl_protocols $SSL_PROTOCOLS;  #enable tlsv1.3 with nginx 1.13 or higher
+        ssl_dhparam /etc/nginx/dh4096.pem;
+      #	ssl_ciphers  EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:EECDH:EDH+aRSA:HIGH:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!SEED:!DSS:!CAMELLIA:!Medium;
+        ssl_ciphers 'ECDHE:DHE:!AES128:HIGH:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!SEED:!DSS:!CAMELLIAD';
+      #	ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!SEED:!DSS:!CAMELLIA:!Medium;
+        ssl_ecdh_curve $SSL_ECDH_CURVE;
+        ssl_session_timeout $SSL_SESSION_TIMEOUT;
+        ssl_session_cache $SSL_SESSION_CACHE;
+        #ssl_session_tickets off; #enable only for nginx > 1.5.9
+        #ssl_stapling on; #enable only for nginx > 1.3.7
+        #ssl_stapling_verify on; #enable only for nginx > 1.3.7
+        #resolver $DNS-IP-1 $DNS-IP-2 valid=300s;
+        #resolver_timeout 5s;
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload";
+        add_header X-Frame-Options DENY;
+        add_header X-Content-Type-Options nosniff;
+        add_header X-XSS-Protection "1; mode=block";
+
+         location / {
+               add_header       X-Host          $HOST;
+               proxy_set_header        Host            $HTTP_HOST;
+               proxy_set_header        X-Real-IP       $REMOTE_ADDR;
+               proxy_pass_request_headers on;
+               proxy_set_header X-Forwarded-For $PROXY_ADD_X_FORWARDED_FOR;
+               proxy_set_header X-Forwarded-Host $HOST;
+               proxy_set_header X-Forwarded-Proto $SCHEME;
+               proxy_set_header X-Forwarded-Server $HTTP_HOST;
+               client_max_body_size    $CLIENT_MAX_BODY_SIZE;
+               client_body_buffer_size $CLIENT_BODY_BUFFER_SIZE;
+               proxy_connect_timeout   $PROXY_CONNECT_TIMEOUT;
+               proxy_send_timeout      $PROXY_SEND_TIMEOUT;
+               proxy_read_timeout      $PROXY_READ_TIMEOUT;
+               proxy_buffers           $PROXY_BUFFERS;
+               $PROXY_PASS
+               $PROXY_SSL_VERIFY
+          }
+
+
+ }
+####server_$FQDN
+
+EOF
+####configFILEend
+  if [[ -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
+    echo "wrote /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
+    return 0
+    echo "should we create a symbolic link to enable the new configuration?"
+    if yesorno; then
+      ln -s /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf /etc/nginx/rproxy-sites_ssl_enabled/$FQDN.conf
+      if nginx -t >/dev/null; then
+        echo "nginx running fine with new config" 
+      fi
+    fi
+  else 
+    echo $?
+    echo "could not create file: /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf"
+    return 1
+  fi
+fi
 }
 
 #####################################################TESTNGINXCONF###### ARGS NONE ####################
