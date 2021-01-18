@@ -270,7 +270,7 @@ cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
 ####server_$FQDN
     server {
         server_name   $FQDN;
-        server_name   www.$FQDN;
+        #server_name   www.$FQDN;
 $(clisten $http)
 
         error_page    500 502 503 504  /50x.html;
@@ -440,12 +440,13 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
   fi
 ask='y'
 while [[ $ask == 'y' ]]; do
-  
+#-d www.$FQDN
+  acmesh_options="--issue -k 4096 -d $FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN_$https.log"
   echo "issuing letsencrypt certificates"
   echo "used command:"
-  echo "acmesh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN -ecc --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force > acme_ngrpconf_$https.log"
+  echo "$acmesh $acmesh_options"
   echo "acme.sh output is stored in acme_ngrpconf-$FQDN-$https.log"
-  $acmesh --issue -k 4096 -d $FQDN -d www.$FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN_$https.log
+  $acmesh $acmesh_options
   if [[ $? -ne 0 ]]; then
     echo 'Issueing certificate was not successfull.'
     grep "$FQDN:Verify error" acme_ngrpconf-$FQDN-$https.log
@@ -491,7 +492,7 @@ done
 ####server_$FQDN
     server {
         server_name   $FQDN;
-        server_name   www.$FQDN;
+        #server_name   www.$FQDN;
         $(clisten $https)
 
         error_page    500 502 503 504  /50x.html;
@@ -819,6 +820,11 @@ case $opt in
       exit 1
     fi
     ;;
+
+#  -w)
+#    shift
+#    subdomain=$1
+#    ;;
 
   -h)
     helpme
