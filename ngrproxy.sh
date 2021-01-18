@@ -322,7 +322,7 @@ EOF
         fi
         ident="$(dd if=/dev/urandom bs=3 count=1 2>/dev/null | sha256sum)"
         echo "$ident" > /var/www/$FQDN/ident
-        if curl http://$FQDN/ident | grep -q "$ident"; then
+        if curl http://$FQDN/ngrproxy | grep -q "$ident"; then
           echo "nginx just serving fine. from local filesystem"
           echo "you need to test the remote server on your own (proxy function)"
           echo "to do so go to http://$FQDN with your http client/browser software"
@@ -561,7 +561,7 @@ EOF
         fi
         ident="$(dd if=/dev/urandom bs=3 count=1 | sha256sum)"
         echo "ident" > /var/www/$FQDN/ident
-        if curl https://$FQDN/ident | grep -q "$ident"; then
+        if curl https://$FQDN/ | grep -q "$ident"; then
           echo "nginx just serving fine. from local filesystem"
           echo "you need to test the remote server on your own (proxy function)"
           echo "to do so go to https://$FQDN with your http client/browser software"
