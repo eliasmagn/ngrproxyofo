@@ -162,7 +162,49 @@ do
 done
 
 }
+#####################################NGINCONF### ARGS ?????????????????? ###########
 
+function nginxconf {
+
+#echo " how many WORKER_PROCESSES?"
+WORKER_PROCESSES=4
+WORKER_CONNECTIONS=512
+
+
+cat >> /etc/nginx/nginx.conf << EOF
+####This file is created by the ngrproxy script.
+#ngrconfid# id = $ngrconfID
+
+worker_processes  $WORKER_PROCESSES;
+user nobody nogroup;
+
+events {
+  use           epoll;
+  worker_connections  $WORKER_CONNECTIONS;
+}
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+
+
+http {
+    server_tokens off;
+    include       mime.types;
+    charset       utf-8;
+    keepalive_timeout  65;
+    #access_log    logs/access.log  combined;
+
+    include /etc/nginx/rproxy-sites_enabled/*
+    include /etc/nginx/rproxy-sites_ssl_enabled/*
+}
+
+
+EOF
+
+}
 
 #####################################NGINCONF80### ARGS $1=ipaddresstobeproxied $2=FQDN ###########
 function nginxconf80 {
@@ -828,6 +870,23 @@ echo "https: $https"
 echo "address to be proxied: $rem_address"
 echo "Domain : $FQDN"
 if [[ -n $http ]] || [[ -n $http ]]; then
+if ngrconfID =$(grep "#ngrconfid# id =" /nginx/nginx.conf); then
+  echo 'found ngrconf "nginx.conf" configuration assuming compatibility'
+else   
+  echo "unknown status of nginx configuration"
+  echo "do you want me to create a default nginx conf compatible with this script? Yes/No"
+  if yesorno; then
+    mv /nginx/nginx.conf /etc/nginx/nginx.conf.old
+    ngrconfID="$(dd if=/dev/urandom bs=6 count=1 | sha256sum)"
+    nginxconf
+  else
+    echo "you need to at least include the following directories  in the extisting nginx conf"
+    echo '/etc/nginx/rproxy-sites_enabled'
+    echo '/etc/nginx/rproxy-sites_ssl_enabled'
+    echo 'this script will throw errors at you otherwise!'
+   # echo 'do you want me to do this? Yes/No'
+   # if yesorno; then                                                                             ########later to add
+   # fi 
   if [[ -n $http ]]; then
     nginxconf80 "$rem_address" "$FQDN"
   fi
