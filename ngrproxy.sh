@@ -223,8 +223,8 @@ echo "webserver @ $PROXYIP will be served as $FQDN"
 echo "setting up directories"
 echo "/var/www/$FQDN"
 mkdir -p /var/www/$FQDN
-echo "/var/www/$FQDN/.well-known/acme_challenge/"
-mkdir -p /var/www/$FQDN/.well-known/acme_challenge/
+echo "/var/www/$FQDN/.well-known/acme-challenge/"
+mkdir -p /var/www/$FQDN/.well-known/acme-challenge/
 echo "/etc/nginx/rproxy-sites_available"
 mkdir -p /etc/nginx/rproxy-sites_available
 echo "/etc/nginx/rproxy-sites_enabled"
@@ -275,7 +275,7 @@ $(clisten $http)
 
         error_page    500 502 503 504  /50x.html;
 
-        location      /ngrproxy/ { root      /var/www/$FQDN/; }
+        location      /ngrproxy { alias      /var/www/$FQDN/ident; }
 
         location      /.well-known/acme-challenge/ {
             root      /var/www/$FQDN/.well-known/acme-challenge/;
@@ -320,8 +320,8 @@ EOF
           systemctl stop nginx
           systemctl start nginx
         fi
-        ident="$(dd if=/dev/urandom bs=3 count=1 | sha256sum)"
-        echo "ident" > /var/www/$FQDN/ident
+        ident="$(dd if=/dev/urandom bs=3 count=1 2>/dev/null | sha256sum)"
+        echo "$ident" > /var/www/$FQDN/ident
         if curl http://$FQDN/ident | grep -q "$ident"; then
           echo "nginx just serving fine. from local filesystem"
           echo "you need to test the remote server on your own (proxy function)"
@@ -519,7 +519,7 @@ done
         add_header X-Content-Type-Options nosniff;
         add_header X-XSS-Protection "1; mode=block";
 
-        location      /ngrproxy/ { root      /var/www/$FQDN/; }
+        location      /ngrproxy { alias      /var/www/$FQDN/ident; }
 
         location / {
               add_header       X-Host          $HOST;
