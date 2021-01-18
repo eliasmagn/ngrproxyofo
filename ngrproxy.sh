@@ -306,7 +306,7 @@ $(clisten $http)
 ####server_$FQDN
 EOF
 ####configFILEend
-
+ 
   if [[ -f /etc/nginx/rproxy-sites_available/$FQDN.conf ]]; then
     echo "wrote /etc/nginx/rproxy-sites_available/$FQDN.conf"
     echo "should we create a symbolic link to enable the new configuration? Yes/No"
@@ -330,8 +330,7 @@ EOF
           echo "There is an issue with your network."
         fi
         rm /var/www/$FQDN/ident
-        vi -c "%s/location      /ngrproxy/ { root      /var/www/$FQDN/; }/#location      /ngrproxy/ { root      /var/www/$FQDN/; }/gc" -c "wq!" /etc/nginx/rproxy-sites_available/$FQDN.conf
-
+        vi -c "%s|location      /ngrproxy|#location      /ngrproxy|gc" -c "wq!" /etc/nginx/rproxy-sites_available/$FQDN.conf
       else 
         echo "There is an unknown issue with nginx pls resolve it yourself"
         nginx -t
@@ -455,7 +454,7 @@ while [[ $ask == 'y' ]]; do
     fi
     echo "we can wait here.. till you solved that issue or just restart the script later."
     echo 'Just tell me if you want to retry? Yes/No '
-    ask=yesorno
+    ask=$(yesorno)
   else
     ask='n'
   fi
@@ -570,7 +569,7 @@ EOF
           echo "There is an issue with your network."
         fi
         rm /var/www/$FQDN/ident
-        vi -c "%s/location      /ngrproxy/ { root      /var/www/$FQDN/; }/#location      /ngrproxy/ { root      /var/www/$FQDN/; }/gc" -c "wq!" /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf
+        vi -c "%s|location      /ngrproxy|#location      /ngrproxy|gc" -c "wq!" /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf
       else 
         echo "There is an unknown issue with nginx pls resolve it yourself"
         nginx -t
