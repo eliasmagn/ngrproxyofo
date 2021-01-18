@@ -274,7 +274,8 @@ else
 fi
 }
 
-function ngxwellknown80 {   ##dont use this hazardous function  needs to be changed when needed at all
+function ngxwellknown80 {   
+  echo "dont use this hazardous function  needs to be changed when needed at all"
 
 # if [[ ! -f /etc/nginx/rproxy-sites_enabled/$FQDN.conf ]]; then
 #   echo "LetsEncrypt needs a minimal server running on port 80 to verify origin of the domain!"
