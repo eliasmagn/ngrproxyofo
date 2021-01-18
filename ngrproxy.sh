@@ -865,7 +865,7 @@ echo "https: $https"
 echo "address to be proxied: $rem_address"
 echo "Domain : $FQDN"
 if [[ -n $http ]] || [[ -n $http ]]; then
-  if ngrconfID =$(grep "#ngrconfid# id =" /nginx/nginx.conf); then
+  if ngrconfID=$(grep "#ngrconfid# id =" /etc/nginx/nginx.conf); then
     echo 'found ngrconf "nginx.conf" configuration assuming compatibility'
   else   
     echo 'unknown status of nginx configuration'
