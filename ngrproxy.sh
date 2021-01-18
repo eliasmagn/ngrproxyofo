@@ -276,41 +276,41 @@ fi
 
 function ngxwellknown80 {   ##dont use this hazardous function  needs to be changed when needed at all
 
-if [[ ! -f /etc/nginx/rproxy-sites_enabled/$FQDN.conf ]]; then
-  echo "LetsEncrypt needs a minimal server running on port 80 to verify origin of the domain!"
-  echo "create it?"
-  if yesorno; then 
+# if [[ ! -f /etc/nginx/rproxy-sites_enabled/$FQDN.conf ]]; then
+#   echo "LetsEncrypt needs a minimal server running on port 80 to verify origin of the domain!"
+#   echo "create it?"
+#   if yesorno; then 
 
-cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
+# cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
 
-####server_$FQDN
-    server {
-        server_name   $FQDN;
-        server_name   www.$FQDN;
-        $(clisten $http)
+# ####server_$FQDN
+#     server {
+#         server_name   $FQDN;
+#         server_name   www.$FQDN;
+#         $(clisten $http)
 
-        error_page    500 502 503 504  /50x.html;
+#         error_page    500 502 503 504  /50x.html;
 
-        location      /.well-known/acme-challenge/ {
-            root      /var/www/$FQDN/;
+#         location      /.well-known/acme-challenge/ {
+#             root      /var/www/$FQDN/;
 
-       }
-}
-####server_$FQDN
-EOF     
-  else
-    echo "you have to transfer the file which will be created by the acme.sh in"
-    echo "/var/www/$FQDN/.well-known/acme-challenge/SOMEFILE"
-    echo "to the server root serving on port 80"
-    echo "do you want to continue"
-    if yesorno; then
-      manfileacme=true
-    else
-      echo "ok exiting script"
-      exit 1
-    fi
-  fi
-fi
+#        }
+# }
+# ####server_$FQDN
+# EOF     
+#   else
+#     echo "you have to transfer the file which will be created by the acme.sh in"
+#     echo "/var/www/$FQDN/.well-known/acme-challenge/SOMEFILE"
+#     echo "to the server root serving on port 80"
+#     echo "do you want to continue"
+#     if yesorno; then
+#       manfileacme=true
+#     else
+#       echo "ok exiting script"
+#       exit 1
+#     fi
+#   fi
+# fi
 }
 
 ##################################NGINCONF443### ARGS $1=ipaddresstobeproxied $2=FQDN ###########
