@@ -721,11 +721,6 @@ else
 fi
 }
 
-
-
-
-
-
 #############################################GETARGS############ ARGS ALL INPUT in any order ##########
 
 
@@ -870,46 +865,52 @@ echo "https: $https"
 echo "address to be proxied: $rem_address"
 echo "Domain : $FQDN"
 if [[ -n $http ]] || [[ -n $http ]]; then
-if ngrconfID =$(grep "#ngrconfid# id =" /nginx/nginx.conf); then
-  echo 'found ngrconf "nginx.conf" configuration assuming compatibility'
-else   
-  echo "unknown status of nginx configuration"
-  echo "do you want me to create a default nginx conf compatible with this script? Yes/No"
-  if yesorno; then
-    mv /nginx/nginx.conf /etc/nginx/nginx.conf.old
-    ngrconfID="#ngrconfid# id = $(dd if=/dev/urandom bs=6 count=1 | sha256sum)"                     ###########for future features 
-    nginxconf
-  else
-    echo "you need to at least include the following directories  in the extisting nginx conf"
-    echo '/etc/nginx/rproxy-sites_enabled'
-    echo '/etc/nginx/rproxy-sites_ssl_enabled'
-    echo 'this script will throw errors at you otherwise!'
-   # echo 'do you want me to do this? Yes/No'
-   # if yesorno; then                                                                             ########later to add
-   # fi 
+  if ngrconfID =$(grep "#ngrconfid# id =" /nginx/nginx.conf); then
+    echo 'found ngrconf "nginx.conf" configuration assuming compatibility'
+  else   
+    echo 'unknown status of nginx configuration'
+    echo 'do you want me to create a default nginx conf compatible with this script,'
+    echo 'backup of current config file will be at /etc/nginx/nginx.conf.old ? Yes/No'
+    if yesorno; then
+      mv /nginx/nginx.conf /etc/nginx/nginx.conf.old
+      ngrconfID="#ngrconfid# id = $(dd if=/dev/urandom bs=6 count=1 | sha256sum)"                     ###########for future features 
+      nginxconf
+    else
+      echo 'you need to at least include the following directories  in the extisting nginx conf'
+      echo '/etc/nginx/rproxy-sites_enabled'
+      echo '/etc/nginx/rproxy-sites_ssl_enabled'
+      echo 'this script will throw errors at you otherwise!'
+      echo 'press enter to go on'
+      read
+    # echo 'do you want me to do this? Yes/No'
+    # if yesorno; then                                                                             ########later to add
+    # fi 
+    fi
   fi
   if [[ -n $http ]]; then
-    nginxconf80 "$rem_address" "$FQDN"
-  fi
-  if [[ -n $https ]]; then
-    if ls acme.sh >/dev/null 2>&1; then
-      echo "acme.sh found https enabled"
-      acme=true
-      acmesh="$PWD/acme.sh"
-      nginxconf443 "$rem_address" "$FQDN"
-    else
-      echo "we need to download acme.sh y/n (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
-      if yesorno; then
-        curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
+      nginxconf80 "$rem_address" "$FQDN"
+    fi
+    if [[ -n $https ]]; then
+      if ls acme.sh >/dev/null 2>&1; then
+        echo "acme.sh found https enabled"
+        acme=true
         acmesh="$PWD/acme.sh"
-        nginxconf80 "$rem_address" "$FQDN"
+        nginxconf443 "$rem_address" "$FQDN"
       else
-        echo "without acme.sh https configuration is currently not supported" 
-        echo "exiting" 
-        exit 1
+        echo "we need to download acme.sh y/n (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
+        if yesorno; then
+          curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
+          acmesh="$PWD/acme.sh"
+          nginxconf80 "$rem_address" "$FQDN"
+        else
+          echo "without acme.sh https configuration is currently not supported" 
+          echo "exiting" 
+          exit 1
+        fi
       fi
     fi
-  fi  
+  fi    
+  return 0
 else
   echo 'nope?'
   helpme
