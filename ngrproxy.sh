@@ -322,7 +322,7 @@ EOF
         fi
         ident="$(dd if=/dev/urandom bs=3 count=1 2>/dev/null | sha256sum)"
         echo "$ident" > /var/www/$FQDN/ident
-        if curl http://$FQDN/ngrproxy | grep -q "$ident"; then
+        if curl http://$FQDN/ngrproxy 2>/dev/null | grep -q "$ident"; then
           echo "nginx just serving fine. from local filesystem"
           echo "you need to test the remote server on your own (proxy function)"
           echo "to do so go to http://$FQDN with your http client/browser software"
@@ -553,16 +553,16 @@ EOF
     if yesorno; then
       ln -s /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf /etc/nginx/rproxy-sites_ssl_enabled/$FQDN.conf
       if nginx -t; then
-        if [[ openwrt == true ]]; then 
+        if [[ $openwrt == true ]]; then 
           /etc/init.d/nginx stop 
           /etc/init.d/nginx start
         else
           systemctl stop nginx
           systemctl start nginx
         fi
-        ident="$(dd if=/dev/urandom bs=3 count=1 | sha256sum)"
+        ident="$(dd if=/dev/urandom bs=3 count=1 2>/dev/null | sha256sum)"
         echo "ident" > /var/www/$FQDN/ident
-        if curl https://$FQDN/ | grep -q "$ident"; then
+        if curl https://$FQDN/ 2>/dev/null | grep -q "$ident"; then
           echo "nginx just serving fine. from local filesystem"
           echo "you need to test the remote server on your own (proxy function)"
           echo "to do so go to https://$FQDN with your http client/browser software"
@@ -901,31 +901,29 @@ if [[ -n $http ]] || [[ -n $http ]]; then
   fi
   if [[ -n $http ]]; then
       nginxconf80 "$rem_address" "$FQDN"
-    fi
-    if [[ -n $https ]]; then
-      if ls acme.sh >/dev/null 2>&1; then
-        echo "acme.sh found https enabled"
-        acme=true
+  fi
+  if [[ -n $https ]]; then
+    if ls acme.sh >/dev/null 2>&1; then
+      echo "acme.sh found https enabled"
+      acme=true
+      acmesh="$PWD/acme.sh"
+      nginxconf443 "$rem_address" "$FQDN"
+    else
+      echo "we need to download acme.sh y/n (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
+      if yesorno; then
+        curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
         acmesh="$PWD/acme.sh"
-        nginxconf443 "$rem_address" "$FQDN"
+        nginxconf80 "$rem_address" "$FQDN"
       else
-        echo "we need to download acme.sh y/n (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
-        if yesorno; then
-          curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
-          acmesh="$PWD/acme.sh"
-          nginxconf80 "$rem_address" "$FQDN"
-        else
-          echo "without acme.sh https configuration is currently not supported" 
-          echo "exiting" 
-          exit 1
-        fi
+        echo "without acme.sh https configuration is currently not supported" 
+        echo "exiting" 
+        exit 1
       fi
     fi
   fi    
-  return 0
 else
   echo 'nope?'
   helpme
-  return 1
+  exit 1
 fi
  
