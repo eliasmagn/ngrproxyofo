@@ -156,7 +156,7 @@ fi
 
 function clisten {
 
-for ip in "${local_ips[@]}"
+for ip in ${local_ips[@]}
 do
   echo "listen      $ip $1;"
 done
@@ -197,8 +197,8 @@ http {
     keepalive_timeout  65;
     #access_log    logs/access.log  combined;
 
-    include /etc/nginx/rproxy-sites_enabled/*
-    include /etc/nginx/rproxy-sites_ssl_enabled/*
+    include /etc/nginx/rproxy-sites_enabled/*.conf;
+    include /etc/nginx/rproxy-sites_ssl_enabled/*.conf;
 }
 
 
@@ -873,7 +873,7 @@ if [[ -n $http ]] || [[ -n $http ]]; then
     echo 'backup of current config file will be at /etc/nginx/nginx.conf.old ? Yes/No'
     if yesorno; then
       mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.old
-      ngrconfID="#ngrconfid# id = $(dd if=/dev/urandom bs=6 count=1 | sha256sum)"                     ###########for future features 
+      ngrconfID="#ngrconfid# id = $(dd if=/dev/urandom bs=6 count=1 2>/dev/null | sha256sum)"                     ###########for future features 
       nginxconf
     else
       echo 'you need to at least include the following directories  in the extisting nginx conf'
