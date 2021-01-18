@@ -161,7 +161,11 @@ function clisten {
 
 for ip in ${local_ips[@]}
 do
+if [[ $ip =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then 
+  echo "        listen      [$ip]:$1;"
+else
   echo "        listen      $ip:$1;"
+fi
 done
 
 }
