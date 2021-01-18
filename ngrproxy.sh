@@ -260,11 +260,11 @@ EOF
 
   if [[ -f /etc/nginx/rproxy-sites_available/$FQDN.conf ]]; then
     echo "wrote /etc/nginx/rproxy-sites_available/$FQDN.conf"
-    echo "should we create a symbolic link to enable the new configuration?"
+    echo "should we create a symbolic link to enable the new configuration? Yes/No"
     if yesorno; then
       ln -s /etc/nginx/rproxy-sites_available/$FQDN.conf /etc/nginx/rproxy-sites_enabled/$FQDN.conf
       if nginx -t; then
-        if [[ openwrt == true ]]; then 
+        if [[ $openwrt == true ]]; then 
           /etc/init.d/nginx stop 
           /etc/init.d/nginx start
         else
@@ -281,6 +281,8 @@ EOF
           echo "There is an issue with your network."
         fi
         rm /var/www/$FQDN/ident
+        vi -c "%s/location      /ngrproxy/ { root      /var/www/$FQDN/; }/#location      /ngrproxy/ { root      /var/www/$FQDN/; }/gc" -c "wq!" /etc/nginx/rproxy-sites_available/$FQDN.conf
+
       else 
         echo "There is an unknown issue with nginx pls resolve it yourself"
         nginx -t
@@ -519,7 +521,7 @@ EOF
           echo "There is an issue with your network."
         fi
         rm /var/www/$FQDN/ident
-        
+        vi -c "%s/location      /ngrproxy/ { root      /var/www/$FQDN/; }/#location      /ngrproxy/ { root      /var/www/$FQDN/; }/gc" -c "wq!" /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf
       else 
         echo "There is an unknown issue with nginx pls resolve it yourself"
         nginx -t
@@ -819,6 +821,7 @@ if [[ $(cat /proc/version | grep -q OpenWrt) -eq 0 ]] || [[ $(cat /etc/os-releas
 fi
 getargs $@
 
+echo "running openwrt: $openwrt"
 echo "local ips: ${local_ips[@]}"
 echo "http port: $http"
 echo "https: $https"
