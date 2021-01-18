@@ -101,7 +101,7 @@ if [[ $ip != 1 ]] || [[ $ip6 != 1 ]]; then
 else
   return 2
 fi
-
+echo ""
 }
 
 ######################################################DOMAINPOINTSTO########################
@@ -139,18 +139,18 @@ do
   else
     echo "$ip found $1 is pointing on me"
     local_ips+="$ip"
-    return 0
   fi
 done
-
-
-
- echo "$ip not found on local interface"
+if [[ -n local_ips ]]; then
+    echo "$ip not found on local interface"
     echo "The address of domain $1 is not pointing on any local interface(ping command) -> abort script? (y/n)"
     yesorno
     if [[ $? == 1 ]]; then
       return 2
     fi
+else
+  return 0
+fi
 
 } 
 
@@ -189,7 +189,7 @@ HOST='$host'
 echo "Set proxy pass to https? Yes/No?"
 yesorno
 if [[ $? -eq 0 ]]; then
-  PROXY_PASS='proxy_pass https://$PROXYIP;'
+  PROXY_PASS="proxy_pass https://$PROXYIP;"
   echo "set proxy_ssl_verify on ? Yes/No?"
   yesorno
   if [[ $? -eq 0 ]]; then
@@ -200,7 +200,7 @@ if [[ $? -eq 0 ]]; then
     PROXY_SSL_VERIFY='proxy_ssl_verify off;'
   fi
 else
-  PROXY_PASS='proxy_pass http://$PROXYIP;'
+  PROXY_PASS="proxy_pass http://$PROXYIP;"
 fi
 echo ""
 
@@ -275,7 +275,7 @@ fi
 }
 
 function ngxwellknown80 {   
-  echo "dont use this hazardous function  needs to be changed when needed at all"
+  echo "dont use this hazardous function it needs to be changed when needed at all"
 
 # if [[ ! -f /etc/nginx/rproxy-sites_enabled/$FQDN.conf ]]; then
 #   echo "LetsEncrypt needs a minimal server running on port 80 to verify origin of the domain!"
@@ -771,7 +771,7 @@ if [[ -n $http ]] || [[ -n $http ]]; then
       echo "acme.sh found https enabled"
       acme=true
       acmesh="$PWD/acme.sh"
-      nginxconf80 "$rem_address" "$FQDN"
+      nginxconf443 "$rem_address" "$FQDN"
     else
       echo "we need to download acme.sh y/n (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
       if yesorno; then
