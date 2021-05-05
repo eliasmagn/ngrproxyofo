@@ -172,10 +172,18 @@ function clisten {
 
 for ip in ${local_ips[@]}
 do
-if [[ $ip =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then 
-  echo "        listen      [$ip]:$1;"
+if [[ $ip =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then
+  if [[ $ip == $https ]]; then 
+    echo "        listen      [$ip]:$1 ssl;"
+  else
+    echo "        listen      [$ip]:$1;"
+  fi
 else
-  echo "        listen      $ip:$1;"
+  if [[ $ip == $https ]]; then 
+    echo "        listen      $ip:$1 ssl;"
+  else
+    echo "        listen      $ip:$1;"
+  fi
 fi
 done
 
@@ -294,6 +302,7 @@ $([[ ! -z "$subdomain" ]] && echo "        server_name   $subdomain.$FQDN;")
        }
 
          location / {
+		proxy_http_version 1.1;
                add_header       X-Host          $HOST;
                proxy_set_header        Host            $HTTP_HOST;
                proxy_set_header        X-Real-IP       $REMOTE_ADDR;
@@ -508,14 +517,14 @@ done
     server {
         server_name   $FQDN;
 $([[ ! -z "$subdomain" ]] && echo "        server_name   $subdomain.$FQDN;")
-        $(clisten $https)
+        $(clisten $https) 
 
         error_page    500 502 503 504  /50x.html;
 
-	      ssl on;
-	      ssl_certificate /etc/nginx/acme.sh/$FQDN/fullchain.pem;
-	      ssl_certificate_key     /etc/nginx/acme.sh/$FQDN/key.pem;
- 	      ssl_trusted_certificate /etc/nginx/acme.sh/$FQDN/cert.pem;
+	#ssl on;
+	ssl_certificate /etc/nginx/acme.sh/$FQDN/fullchain.pem;
+	ssl_certificate_key     /etc/nginx/acme.sh/$FQDN/key.pem;
+ 	ssl_trusted_certificate /etc/nginx/acme.sh/$FQDN/cert.pem;
         ssl_prefer_server_ciphers on;
         ssl_protocols $SSL_PROTOCOLS;  #enable tlsv1.3 with nginx 1.13 or higher
         ssl_dhparam /etc/nginx/dh4096.pem;
@@ -538,6 +547,7 @@ $([[ ! -z "$subdomain" ]] && echo "        server_name   $subdomain.$FQDN;")
         location      /ngrproxy { alias      /var/www/$FQDN/ident; }
 
         location / {
+	      proxy_http_version 1.1;
               add_header       X-Host          $HOST;
               proxy_set_header        Host            $HTTP_HOST;
               proxy_set_header        X-Real-IP       $REMOTE_ADDR;
