@@ -281,8 +281,8 @@ cat >> /etc/nginx/rproxy-sites_available/$FQDN.conf << EOF
 ####server_$FQDN
     server {
         server_name   $FQDN;
-        #server_name   www.$FQDN;
-$(clisten $http)
+$([[ ! -z "$subdomain" ]] && echo "        server_name   $subdomain.$FQDN;")
+	$(clisten $http)
 
         error_page    500 502 503 504  /50x.html;
 
@@ -507,7 +507,7 @@ done
 ####server_$FQDN
     server {
         server_name   $FQDN;
-        #server_name   www.$FQDN;
+$([[ ! -z "$subdomain" ]] && echo "        server_name   $subdomain.$FQDN;")
         $(clisten $https)
 
         error_page    500 502 503 504  /50x.html;
