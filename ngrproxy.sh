@@ -8,33 +8,8 @@
 
 ########################SIMPLE NGINX CONFIG FOR REVERSE PROXY IN OPENWRT#############
 
-#opkg install nginx 
-#open icmp in firewall
-#ping is needed 
-#curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
-#chmod a+x "acme.sh"
-#./acme.sh --install
-#
 
-
-######################################################DISCLAIMER#################################
-function disclaimer {
-echo "I am not a software developer neither a studied IT specialist in any means, more likely i am an it enthusiast."
-echo "This makes this software a potential risk to use for any production system even when i plan to do so."
-echo "If you find any bugs or you can give me advice please contribute on github https://github.com/eliasmagn"
-}
-
-
-######################################################HELP#################################
-function helpme {
-
-echo 'here should be a help'
-echo 'there is not ? '
-echo 'blame yourself to not have contributed this function yet'
-echo ' or just do it ;-)'
-}
-
-######################################################HELP#################################
+######################################################YESORNO#################################
 
 
 function yesorno {
@@ -62,6 +37,42 @@ while [[ $ask == true ]]; do
   esac
 done
 ask=''
+}
+
+######################################################DEPENDENCIES#################################
+function depinst {
+
+#open icmp in firewall
+#ping is needed 
+echo 'do you want to install dependencies like nginx, acme.sh, etc.?'
+if yesorno; then
+  opkg update
+  echo 'Install nginx-ssl?'
+  yesorno && opkg install nginx-ssl
+  echo 'Should i download and install acme.sh?'
+  yesorno && curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh && chmod a+x "acme.sh" &&  ./acme.sh --install
+fi
+}
+
+######################################################DISCLAIMER#################################
+function disclaimer {
+echo "I am not a software developer neither a studied IT specialist in any means, more likely i am an it enthusiast."
+echo "This makes this software a potential risk to use for any production system even when i plan to do so."
+echo "If you find any bugs or you can give me advice please contribute on github https://github.com/eliasmagn"
+}
+
+
+######################################################HELP#################################
+function helpme {
+
+echo 'here should be a help'
+echo 'there is not ? '
+echo 'blame yourself to not have contributed this function yet'
+echo ' or just do it ;-)'
+echo 'example use: '
+echo './ngrproxy.sh -d domain.tld -i 127.0.0.1 -s 443 -g 80 -w'
+
+
 }
 
 ######################################################GOODIP################################
@@ -440,8 +451,12 @@ if [[ ! -f /etc/nginx/rproxy-sites_ssl_available/$FQDN.conf ]]; then
   fi
 ask='y'
 while [[ $ask == 'y' ]]; do
-#-d www.$FQDN
-  acmesh_options="--issue -k 4096 -d $FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN_$https.log"
+  if [ -z "$subdomain" ]; then
+     acmesh_options="--issue -k 4096 -d $FQDN  -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN_$https.log"
+  else 
+     acmesh_options="--issue -k 4096 -d $FQDN -d $subdomain.$FQDN -w /var/www/$FQDN --cert-file /etc/nginx/acme.sh/$FQDN/cert.pem --key-file /etc/nginx/acme.sh/$FQDN/key.pem --fullchain-file /etc/nginx/acme.sh/$FQDN/fullchain.pem --nginx --debug --force --log acme_ngrpconf-$FQDN_$https.log"
+  fi
+
   echo "issuing letsencrypt certificates"
   echo "used command:"
   echo "$acmesh $acmesh_options"
@@ -821,10 +836,9 @@ case $opt in
     fi
     ;;
 
-#  -w)
-#    shift
-#    subdomain=$1
-#    ;;
+  -w)
+    subdomain="www"
+    ;;
 
   -h)
     helpme
