@@ -50,7 +50,7 @@ if yesorno; then
   echo 'Install nginx-ssl?'
   yesorno && opkg install nginx-ssl
   echo 'Should i download and install acme.sh?'
-  yesorno && curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh && chmod a+x "acme.sh" &&  ./acme.sh --install
+  yesorno && opkg install uclient-fetch && uclient-fetch https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh && chmod a+x "acme.sh" &&  ./acme.sh --install
 fi
 }
 
@@ -900,6 +900,7 @@ echo "http port: $http"
 echo "https: $https"
 echo "address to be proxied: $rem_address"
 echo "Domain : $FQDN"
+debinst
 if [[ -n $http ]] || [[ -n $http ]]; then
   if ngrconfID=$(grep "#ngrconfid# id =" /etc/nginx/nginx.conf); then
     echo 'found ngrconf "nginx.conf" configuration assuming compatibility'
@@ -935,7 +936,17 @@ if [[ -n $http ]] || [[ -n $http ]]; then
     else
       echo "we need to download acme.sh y/n (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
       if yesorno; then
-        curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
+        if which uclient-fetch; then 
+           uclient-fetch https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh
+        elif which curl;  
+           curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
+        elif which wget;
+           wget https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh
+        else
+	  echo 'we need to install dependencies!'
+	  echo 'at least nginx-ssl and uclient-fetch/curl/wget!'
+          debinst
+        fi
         acmesh="$PWD/acme.sh"
         nginxconf80 "$rem_address" "$FQDN"
       else
