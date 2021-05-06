@@ -44,11 +44,13 @@ function depinst {
 
 #open icmp in firewall
 #ping is needed 
-echo 'do you want to install dependencies like nginx, acme.sh, etc.?'
+echo 'do you want to install dependencies like nginx, openssl, acme.sh, etc.?'
 if yesorno; then
   opkg update
   echo 'Install nginx-ssl?'
   yesorno && opkg install nginx-ssl
+  echo 'Install openssl?'
+  yesorno && opkg install openssl-util 
   echo 'Should i download and install acme.sh?'
   yesorno && opkg install uclient-fetch && uclient-fetch https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh && chmod a+x "acme.sh" &&  ./acme.sh --install
 fi
@@ -934,21 +936,29 @@ if [[ -n $http ]] || [[ -n $http ]]; then
       acmesh="$PWD/acme.sh"
       nginxconf443 "$rem_address" "$FQDN"
     else
-      echo "we need to download acme.sh y/n (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
+      echo "we need to download and install acme.sh y/n (https://raw.githubusercontent.com/Neilpang/acme.sh)?"
       if yesorno; then
         if which uclient-fetch; then 
            uclient-fetch https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh
-        elif which curl;  
+        elif which curl; then  
            curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh > acme.sh
-        elif which wget;
+        elif which wget; then
            wget https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh
         else
 	  echo 'we need to install dependencies!'
-	  echo 'at least nginx-ssl and uclient-fetch/curl/wget!'
-          debinst
+	  echo 'at least bash, nginx-ssl, openssl and uclient-fetch/curl/wget to have a working acme script!'
+          depinst
         fi
+	chmod a+x "acme.sh" 
+        if which openssl; then
+	  ./acme.sh --install
+          acme=true
+        else 
+	  echo "we need openssl! say y to install or n for fault"
+          yesorno && opkg update && opkg install openssl-util
+	fi
         acmesh="$PWD/acme.sh"
-        nginxconf80 "$rem_address" "$FQDN"
+        nginxconf443 "$rem_address" "$FQDN"
       else
         echo "without acme.sh https configuration is currently not supported" 
         echo "exiting" 
