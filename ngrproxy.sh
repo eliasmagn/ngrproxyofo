@@ -175,13 +175,13 @@ function clisten {
 for ip in ${local_ips[@]}
 do
 if [[ $ip =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then
-  if [[ $ip == $https ]]; then 
+  if [[ $1 == $https ]]; then 
     echo "        listen      [$ip]:$1 ssl;"
   else
     echo "        listen      [$ip]:$1;"
   fi
 else
-  if [[ $ip == $https ]]; then 
+  if [[ $1 == $https ]]; then 
     echo "        listen      $ip:$1 ssl;"
   else
     echo "        listen      $ip:$1;"
@@ -849,9 +849,16 @@ case $opt in
     ;;
 
   -w)
-    subdomain="www"
+    shift
+    case $1 in
+      -h | -w | -g | -s | -d | -i | -r | -f)
+        subdomain="www"
+        ;;
+      *)
+        subdomain=$1
+        ;;
+    esac
     ;;
-
   -h)
     helpme
     exit 1
