@@ -1,31 +1,43 @@
-## Script is not working yet
+# NGRProxy
 
-# owrtngxsslrprxyscript
-openwrt nginx ssl https reverse proxy script with acme.sh support
+NGRProxy is an OpenWrt/LuCI app that manages nginx reverse-proxy configuration via UCI with hardened defaults and DHCP-aware upstream selection.
 
-# use
-first chmod -x the script 
+## Highlights
+- UCI-first OpenWrt model (`/etc/config/ngrproxy`).
+- Per-host classes:
+  - `http_host` for HTTP/TLS reverse proxies.
+  - `stream_host` for encrypted TCP passthrough (mail and similar protocols).
+- Secure HTTPS upstream handling:
+  - requires SNI (`upstream_sni`),
+  - requires trusted CA bundle (`upstream_ca`),
+  - enforces verification for HTTPS backends.
+- Upstream host dropdown populated from:
+  - static DHCP leases (`/etc/config/dhcp`),
+  - dynamic leases (`/tmp/dhcp.leases`).
+- LuCI preview helper with upstream URL + favicon thumbnail.
 
-you need a minimal nginx.conf 
+## Package layout
+- `luci-app-ngrproxy/Makefile`
+- `luci-app-ngrproxy/luasrc/controller/ngrproxy.lua`
+- `luci-app-ngrproxy/luasrc/model/cbi/ngrproxy.lua`
+- `luci-app-ngrproxy/root/etc/config/ngrproxy`
+- `luci-app-ngrproxy/root/etc/init.d/ngrproxy`
+- `luci-app-ngrproxy/root/usr/libexec/ngrproxy/render.sh`
+- `luci-app-ngrproxy/root/usr/share/rpcd/acl.d/luci-app-ngrproxy.json`
 
-script will create serveral directories under /var/www/ 
+## Deploy (OpenWrt buildroot)
+1. Add/copy `luci-app-ngrproxy` into your OpenWrt feed tree.
+2. Run:
+   - `./scripts/feeds update -a`
+   - `./scripts/feeds install luci-app-ngrproxy`
+3. Enable package in `make menuconfig`.
+4. Build and install package.
 
-if you use external drives append your config or change script! 
-
-the script will always assume www.domain.ltd as second subdomain 
-
-
-#### ./ngrproxy.sh {-r [remoteDomain] | -i [remoteIpAddress]} -d [localDomain] {-s -g}
-
--r RemoteDomain - If you want to proxy a domain
-
--i RemoteIpAddress - If you want to proxy a IpAddress (ipv4/ipv6)
-
--d localDomain - Domain of the proxy
-
--s create SiteSpecificNginxConfig with ssl and execute acme.sh for letsencrypt cert
-
--g create non ssl SiteSpecificNginxConfig
-
--h no help help
-
+## Runtime notes
+1. Ensure nginx includes:
+   - `include /etc/nginx/conf.d/*.conf;` in `http {}`
+   - `include /etc/nginx/stream.d/*.conf;` in `stream {}`
+2. Configure hosts in LuCI and apply.
+3. Generated symlinks:
+   - `/etc/nginx/conf.d/zz-ngrproxy-generated.conf`
+   - `/etc/nginx/stream.d/zz-ngrproxy-generated.conf`

@@ -1,0 +1,11 @@
+{
+  "luci-app-ngrproxy": {
+    "description": "Grant UCI access for NGRProxy",
+    "read": {
+      "uci": ["ngrproxy"]
+    },
+    "write": {
+      "uci": ["ngrproxy"]
+    }
+  }
+}
