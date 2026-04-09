@@ -12,8 +12,9 @@
 - [x] Update docs/tracking files to match current architecture.
 
 ## Next
-- [ ] Add async/on-demand screenshot thumbnail endpoint (optional, per host).
-- [ ] Improve validation feedback text in LuCI for missing cert/CA files.
-- [ ] Add per-host ACL and optional PROXY protocol support.
-- [ ] Add migration utility for old configs.
-- [ ] Run OpenWrt SDK package tests on target releases.
+- [x] Improve validation feedback text in LuCI for missing cert/CA files.
+- [x] Add migration utility for old configs.
+- [x] Add OpenWrt SDK package test runner for target releases.
+- [x] Add optional screenshot thumbnail endpoint integration.
+- [x] Add per-host ACL and optional PROXY protocol support.
+- [ ] Execute SDK tests on real target SDK directories (23.05 / 24.10 / snapshot).

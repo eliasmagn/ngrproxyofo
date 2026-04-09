@@ -11,11 +11,11 @@
 - Basic LuCI upstream preview support.
 
 ## Phase 3 — Operational maturity (In progress)
-- Better error UX in LuCI.
-- OpenWrt version compatibility and package tests.
-- Migration helper for earlier ngrproxy configurations.
+- Better error UX in LuCI. ✅
+- Migration helper for earlier ngrproxy configurations. ✅
+- OpenWrt version compatibility and package tests (scripted runner added; multi-SDK execution pending).
 
-## Phase 4 — Advanced features (Planned)
-- Optional richer thumbnail/screenshot integrations.
-- Policy controls (ACL, PROXY protocol, rate limits).
-- Backup/export and restoration workflows.
+## Phase 4 — Advanced features (In progress)
+- Optional thumbnail/screenshot endpoint integration. ✅
+- Policy controls: per-host ACL + optional PROXY protocol (implemented for stream and ACL for HTTP/stream). ✅
+- Backup/export and restoration workflows. (planned)

@@ -17,6 +17,7 @@ start_service() {
 	enabled="$(uci -q get ngrproxy.settings.enabled)"
 	[ "$enabled" = "1" ] || return 0
 
+	/usr/libexec/ngrproxy/migrate.sh >/tmp/ngrproxy.migrate.log 2>&1 || return 1
 	render_config || return 1
 	reload_nginx="$(uci -q get ngrproxy.settings.reload_nginx)"
 	[ "$reload_nginx" = "1" ] || return 0

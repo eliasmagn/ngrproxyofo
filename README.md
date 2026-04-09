@@ -15,6 +15,10 @@ NGRProxy is an OpenWrt/LuCI app that manages nginx reverse-proxy configuration v
   - static DHCP leases (`/etc/config/dhcp`),
   - dynamic leases (`/tmp/dhcp.leases`).
 - LuCI preview helper with upstream URL + favicon thumbnail.
+- Optional screenshot thumbnail endpoint integration via LuCI controller redirect.
+- Per-host ACL controls for HTTP and stream hosts.
+- Optional PROXY protocol support for stream listeners/upstreams.
+- Legacy config migration utility (`/usr/libexec/ngrproxy/migrate.sh`).
 
 ## Package layout
 - `luci-app-ngrproxy/Makefile`
@@ -41,3 +45,7 @@ NGRProxy is an OpenWrt/LuCI app that manages nginx reverse-proxy configuration v
 3. Generated symlinks:
    - `/etc/nginx/conf.d/zz-ngrproxy-generated.conf`
    - `/etc/nginx/stream.d/zz-ngrproxy-generated.conf`
+4. Optional global screenshot endpoint:
+   - Set `settings.thumbnail_endpoint` with `%s` placeholder (URL-encoded upstream URL is substituted).
+5. Migration:
+   - Service startup runs legacy migration once, guarded by `/etc/ngrproxy/.migrated-v1`.
