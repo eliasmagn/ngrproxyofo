@@ -3,6 +3,7 @@ config global 'settings'
 	option reload_nginx '1'
 	option http_include_dir '/etc/nginx/conf.d'
 	option stream_include_dir '/etc/nginx/stream.d'
+	option thumbnail_endpoint ''
 
 config http_host
 	option enabled '1'
@@ -18,6 +19,8 @@ config http_host
 	option upstream_port '8443'
 	option upstream_sni 'app.internal.example'
 	option upstream_ca '/etc/ssl/certs/internal-ca.pem'
+	list acl_allow '192.168.1.0/24'
+	option acl_deny_all '0'
 
 config stream_host
 	option enabled '1'
@@ -27,3 +30,7 @@ config stream_host
 	option upstream_target 'manual'
 	option upstream_host '10.0.0.20'
 	option upstream_port '465'
+	list acl_allow '10.0.0.0/8'
+	option acl_deny_all '0'
+	option listen_proxy_protocol '0'
+	option send_proxy_protocol '0'

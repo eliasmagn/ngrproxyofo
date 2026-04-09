@@ -1,5 +1,7 @@
 local uci = require "luci.model.uci".cursor()
 local util = require "luci.util"
+local fs = require "nixio.fs"
+local protocol = require "luci.http.protocol"
 
 local function collect_known_hosts()
     local hosts = {}
@@ -54,6 +56,10 @@ http_include_dir.default = "/etc/nginx/conf.d"
 stream_include_dir = s:option(Value, "stream_include_dir", translate("Stream include directory"))
 stream_include_dir.default = "/etc/nginx/stream.d"
 
+thumbnail_endpoint = s:option(Value, "thumbnail_endpoint", translate("Screenshot thumbnail endpoint (optional)"))
+thumbnail_endpoint.placeholder = "https://image.thum.io/get/width/320/noanimate/%s"
+thumbnail_endpoint.description = translate("Use %s as placeholder for the upstream URL (URL-encoded). Leave empty to use favicon fallback.")
+
 h = m:section(TypedSection, "http_host", translate("HTTP(S) virtual hosts"), translate("Each entry terminates client HTTP/TLS at nginx and forwards to an upstream. Upstream TLS verification is mandatory when using HTTPS upstreams."))
 h.template = "cbi/tblsection"
 h.addremove = true
@@ -78,10 +84,34 @@ h_listen_https.default = h_listen_https.enabled
 h_cert = h:option(Value, "tls_cert", translate("TLS certificate (PEM)"))
 h_cert.placeholder = "/etc/nginx/certs/example.crt"
 h_cert:depends("listen_https", "1")
+function h_cert.validate(self, value, section)
+    local listen_https = m.uci:get("ngrproxy", section, "listen_https") or "0"
+    if listen_https == "1" then
+        if not value or value == "" then
+            return nil, translate("HTTPS listener is enabled: certificate path is required.")
+        end
+        if not fs.access(value) then
+            return nil, translatef("Certificate file not found: %s", value)
+        end
+    end
+    return value
+end
 
 h_key = h:option(Value, "tls_key", translate("TLS private key (PEM)"))
 h_key.placeholder = "/etc/nginx/certs/example.key"
 h_key:depends("listen_https", "1")
+function h_key.validate(self, value, section)
+    local listen_https = m.uci:get("ngrproxy", section, "listen_https") or "0"
+    if listen_https == "1" then
+        if not value or value == "" then
+            return nil, translate("HTTPS listener is enabled: private key path is required.")
+        end
+        if not fs.access(value) then
+            return nil, translatef("Private key file not found: %s", value)
+        end
+    end
+    return value
+end
 
 h_upstream_scheme = h:option(ListValue, "upstream_scheme", translate("Upstream scheme"))
 h_upstream_scheme:value("http", "HTTP")
@@ -111,6 +141,24 @@ h_upstream_sni:depends("upstream_scheme", "https")
 h_upstream_ca = h:option(Value, "upstream_ca", translate("Upstream CA bundle path"))
 h_upstream_ca.placeholder = "/etc/ssl/certs/internal-ca.pem"
 h_upstream_ca:depends("upstream_scheme", "https")
+function h_upstream_ca.validate(self, value, section)
+    local scheme = m.uci:get("ngrproxy", section, "upstream_scheme") or "http"
+    if scheme == "https" then
+        if not value or value == "" then
+            return nil, translate("HTTPS upstream is selected: CA bundle path is required.")
+        end
+        if not fs.access(value) then
+            return nil, translatef("CA bundle file not found: %s", value)
+        end
+    end
+    return value
+end
+
+h_acl_allow = h:option(DynamicList, "acl_allow", translate("Allowed client CIDRs/IPs"))
+h_acl_allow.placeholder = "192.168.1.0/24"
+
+h_acl_deny_all = h:option(Flag, "acl_deny_all", translate("Deny clients not in allow list"))
+h_acl_deny_all.default = h_acl_deny_all.enabled
 
 h_thumb = h:option(DummyValue, "_thumbnail", translate("Preview"))
 h_thumb.rawhtml = true
@@ -125,8 +173,15 @@ function h_thumb.cfgvalue(self, section)
     end
 
     local url = string.format("%s://%s:%s/", scheme, host, port)
+    local endpoint = m.uci:get("ngrproxy", "settings", "thumbnail_endpoint") or ""
     local esc = util.pcdata(url)
-    return string.format('<a href="%s" target="_blank">%s</a><br/><img src="%s://%s:%s/favicon.ico" style="max-height:24px;max-width:24px"/>', esc, esc, scheme, util.pcdata(host), util.pcdata(port))
+    local img_src = string.format("/cgi-bin/luci/admin/services/ngrproxy/thumbnail?url=%s", protocol.urlencode(url))
+
+    if endpoint == "" then
+        img_src = string.format("%s://%s:%s/favicon.ico", scheme, util.pcdata(host), util.pcdata(port))
+    end
+
+    return string.format('<a href="%s" target="_blank">%s</a><br/><img src="%s" style="max-height:24px;max-width:24px"/>', esc, esc, img_src)
 end
 
 st = m:section(TypedSection, "stream_host", translate("TCP/TLS passthrough hosts"), translate("Use for mail and other encrypted services that must remain end-to-end encrypted. nginx forwards TCP without decrypting payload."))
@@ -163,5 +218,17 @@ st_upstream_host:depends("upstream_target", "manual")
 st_upstream_port = st:option(Value, "upstream_port", translate("Upstream port"))
 st_upstream_port.datatype = "port"
 st_upstream_port.rmempty = false
+
+st_acl_allow = st:option(DynamicList, "acl_allow", translate("Allowed client CIDRs/IPs"))
+st_acl_allow.placeholder = "10.0.0.0/8"
+
+st_acl_deny_all = st:option(Flag, "acl_deny_all", translate("Deny clients not in allow list"))
+st_acl_deny_all.default = st_acl_deny_all.enabled
+
+st_listen_proxy = st:option(Flag, "listen_proxy_protocol", translate("Expect PROXY protocol from client"))
+st_listen_proxy.default = st_listen_proxy.disabled
+
+st_send_proxy = st:option(Flag, "send_proxy_protocol", translate("Send PROXY protocol to upstream"))
+st_send_proxy.default = st_send_proxy.disabled
 
 return m

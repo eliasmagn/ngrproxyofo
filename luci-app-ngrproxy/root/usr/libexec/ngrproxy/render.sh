@@ -31,10 +31,20 @@ require_file() {
 	}
 }
 
+print_http_acl_allow() {
+	local entry="$1"
+	echo "        allow ${entry};"
+}
+
+print_stream_acl_allow() {
+	local entry="$1"
+	echo "    allow ${entry};"
+}
+
 append_http_host() {
 	local section="$1"
 	local enabled domain listen_http listen_https tls_cert tls_key
-	local upstream_scheme upstream_target upstream_host upstream_port upstream_sni upstream_ca
+	local upstream_scheme upstream_target upstream_host upstream_port upstream_sni upstream_ca acl_deny_all
 
 	config_get enabled "$section" enabled "1"
 	[ "$enabled" = "1" ] || return 0
@@ -50,6 +60,7 @@ append_http_host() {
 	config_get upstream_port "$section" upstream_port ""
 	config_get upstream_sni "$section" upstream_sni ""
 	config_get upstream_ca "$section" upstream_ca ""
+	config_get acl_deny_all "$section" acl_deny_all "0"
 
 	[ -n "$domain" ] || { echo "http_host[$section]: domain is required" >&2; exit 1; }
 	if [ "$upstream_target" != "manual" ] && [ -n "$upstream_target" ]; then
@@ -86,6 +97,8 @@ append_http_host() {
 		fi
 		echo "    server_name ${domain};"
 		echo "    location / {"
+		config_list_foreach "$section" acl_allow print_http_acl_allow
+		[ "$acl_deny_all" = "1" ] && echo "        deny all;"
 		echo "        proxy_set_header Host \$host;"
 		echo "        proxy_set_header X-Real-IP \$remote_addr;"
 		echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;"
@@ -106,6 +119,7 @@ append_http_host() {
 append_stream_host() {
 	local section="$1"
 	local enabled listen_addr listen_port upstream_target upstream_host upstream_port
+	local acl_deny_all listen_proxy_protocol send_proxy_protocol
 
 	config_get enabled "$section" enabled "1"
 	[ "$enabled" = "1" ] || return 0
@@ -115,6 +129,9 @@ append_stream_host() {
 	config_get upstream_target "$section" upstream_target "manual"
 	config_get upstream_host "$section" upstream_host ""
 	config_get upstream_port "$section" upstream_port ""
+	config_get acl_deny_all "$section" acl_deny_all "0"
+	config_get listen_proxy_protocol "$section" listen_proxy_protocol "0"
+	config_get send_proxy_protocol "$section" send_proxy_protocol "0"
 
 	[ -n "$listen_port" ] || { echo "stream_host[$section]: listen_port is required" >&2; exit 1; }
 	if [ "$upstream_target" != "manual" ] && [ -n "$upstream_target" ]; then
@@ -125,8 +142,13 @@ append_stream_host() {
 
 	{
 		echo "server {"
-		echo "    listen ${listen_addr}:${listen_port};"
+		echo -n "    listen ${listen_addr}:${listen_port}"
+		[ "$listen_proxy_protocol" = "1" ] && echo -n " proxy_protocol"
+		echo ";"
+		config_list_foreach "$section" acl_allow print_stream_acl_allow
+		[ "$acl_deny_all" = "1" ] && echo "    deny all;"
 		echo "    proxy_pass ${upstream_host}:${upstream_port};"
+		[ "$send_proxy_protocol" = "1" ] && echo "    proxy_protocol on;"
 		echo "    ssl_preread on;"
 		echo "}"
 		echo
